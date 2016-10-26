@@ -1,0 +1,47 @@
+==============================
+Meeting notes (10/25/16):
+==============================
+- Questions to ask:
+    - Global queue
+    - Flows - how do they work, seriously
+        - Are flows breaking up the packets? What is the relationship of that to the host?
+    - What is a queue event?
+    - What is continuous interval? What are the differences?
+    - How would acknowledgements work?
+
+- Discrete event:
+    - Event examples:
+        - Send A -> B
+        - Router receives packet
+        - B receives packet
+        - Send ACK to A
+    - Global queue processes event one at a time
+    - Events have start time
+    - Looks at method in class and generates an event
+    - Create event class
+
+- Continuous:
+    - Consider events all at the same time
+
+- Packet class:
+    - Parameters:
+        - Origin
+        - Destination
+        - Size
+        - Type
+
+    - Methods:
+        - On send
+        - On receive
+
+- Flow:
+    - Example: sending packets A -> B and A -> C is two flows
+    - Either the host class or the flow class can do the packet generation, congestion control, etc.
+
+- ACKs:
+    - Can have a parent class with ACKs as an inherited class
+
+- Presentation:
+    - Architecture
+    - Work distribution
+    - Plans for the future

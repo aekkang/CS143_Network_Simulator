@@ -1,0 +1,36 @@
+- Host:
+    - 'Represent individual endpoint computers'
+    - Fields:
+        - Network Address
+        - Connecting Link?
+
+- Link:
+    - Half duplex
+    - Fields:
+        - Link ID
+        - Link Rate
+        - Link Delay
+        - Link Buffer
+
+- Router:
+    -Fields:
+        - Network Address
+        - Routing Table
+        - List of links (connected)
+        - Router ID
+
+- Packet:
+    - Fields:
+        - Metadata
+            - Type: Payload or Ack
+            - Source
+            - Destination
+        - Payload
+
+- Flow:
+    - 'Send data and recieve acknowledgements -Sith'
+    - Fields:
+        - Source
+        - Destination
+        - Amount of data
+        - Flow start time
