@@ -14,4 +14,7 @@ class Router:
         self.links = links
 
     def calculate_table(self):
+        '''
+        Calculates routing table.
+        '''
         pass
