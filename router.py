@@ -9,6 +9,7 @@ class Router:
         # The routing table will be represented by a dictionary and calculated
         # using a class method.
         self.routing_table = {}
+        self.calculate_table()
 
         self.links = links
 
