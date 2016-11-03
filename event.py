@@ -9,15 +9,15 @@ class Event:
     def process(self): pass
 
 class SendPacket(Event):
-    def __init__(self, start_time, packet, link, sender):
+    def __init__(self, start_time, packet, link):
         self.start_time = start_time
         self.priority = 5
         self.link = link
-        self.sender = sender
+        self.packet = packet
 
     def process(self):
-        link.buffer_add(pkt)
-        enqueue(CheckBuffer(self.start_time, self.link, self.sender))
+        self.link.buffer_add(self.packet)
+        enqueue(CheckBuffer(self.start_time, self.link))
 
 class CheckBuffer(Event):
     def __init__(self, start_time, link):
@@ -26,7 +26,7 @@ class CheckBuffer(Event):
         self.link = link
 
     def process(self):
-        if self.link.buf_processing || self.link.buffer_empty():
+        if (self.link.buf_processing or self.link.buffer_empty()):
             return;
         else:    
             self.link.buf_processing = True
@@ -55,5 +55,6 @@ class ReceivePacket(Event):
 
     def process(self):
         enqueue(CheckBuffer(self.start_time, self.link))
+        self.packet.recipient.receive(self.packet, self.start_time);
 
 
