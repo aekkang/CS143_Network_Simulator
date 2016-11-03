@@ -2,5 +2,10 @@ from pqueue import event_queue, enqueue, dequeue, qempty
 import event
 
 time = 0
-#while True:
-#    time += 1
+while True:
+    if (not qmepty()):
+        event = dequeue()
+        time = event.start_time
+        event.process()
+
+
