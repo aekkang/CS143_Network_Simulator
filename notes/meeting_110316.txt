@@ -1,0 +1,53 @@
+===================================
+MEETING NOTES
+===================================
+
+( H1 ) ========= L1 ========= ( H2 )
+  \_____________ F1 ___________/
+          
+             __|__|__] L1 buffer
+
+GOAL: Get TEST CASE 0 working by Sunday 11/6!
+
+HOW TO ACHIEVE GOAL: 
+1. Finish main loop (Sandra)
+   --> In pseudocode, the main loop looks like this:
+	textfile = argv[1] 
+	Q = priority_queue()
+	(flows, links, hosts, routers) = parseInput(textfile)
+	for flow in flows:
+		flow.start()
+
+	while Q is not empty:
+		curr_event = dequeue(Q)
+		curr_event.process
+
+2. Code up ***very simple*** flow class (Kevin, Andrew)
+  --> Has a start() function and __init__ function
+  --> NO congestion control, or really any control. Completely lacks self-control.
+  --> In start() method, calculate how many packets of
+  --> size 1024 bytes it needs to send the amnt of data.
+  --> Proceed to enqueue events for sending ALL OF THOSE PACKETS.
+
+  --> This is hella gross but guess what it gets the job done.
+
+3. ~*Perfect*~ our event class and event logic (Chen, everyone else when they available)
+  --> Currently we have events
+  (SEND PACKET) adds packet from H1 to L1 buffer, ENQUEUES
+     (CHECK_BUFFER) check if buffer busy; if not, take new packet out of buffer, ENQUEUES
+        (RECIEVE_PACKET) H2 recieves packet, currently nothing happens when this happens AND
+        (DONE_PROCESSING) notifies link that it's no longer busy, and ENQUEUES
+	   (CHECK_BUFFER) ...
+
+  In the scenario where H1 sends N packets to H2 through L1, and enqueues all
+  of these packets (presumably at the same time t = 1 since no transmission delay)
+  how does the event logic ensure that packets are added to L1's buffer
+  before checking the buffer (which is currently of higher priority)?
+
+--
+
+Although it might seem simple there's a lot of shit I left out O: So let's
+work hard and set some gOoOooOd ass deadlines for ourselves to figure this out
+ok!!!
+Thanks for meeting everyone :)
+		
