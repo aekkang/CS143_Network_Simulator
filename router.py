@@ -3,7 +3,7 @@ class Router:
 
     def __init__(self, links):
         # IDs start from 1.
-        self.id = len(ids) + 1
+        self.address = len(ids) + 1
         ids.append(self.id)
 
         # The routing table will be represented by a dictionary and calculated

@@ -1,4 +1,3 @@
-import event
 import Queue
 
 ''' 
