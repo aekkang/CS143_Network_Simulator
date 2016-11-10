@@ -15,7 +15,7 @@ class Packet(object):
 class Ack(Packet):
     ACK_SIZE = 64
 
-    # Kye: Good job for making this work! :D
+    # Inheritance syntax from
     # Source: http://stackoverflow.com/questions/9698614/
     #         super-raises-typeerror-must-be-type-not-classobj-for-new-style-class
     def __init__(self, sender, recipient):
