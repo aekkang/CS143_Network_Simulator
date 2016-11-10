@@ -1,0 +1,16 @@
+TO FIX:
+1. account for transmission delay as buffer sends packet
+2. (i think this is fixed but just putting it here for reference/affirmation)
+  check the buffer when:
+	- packet is sent: we want to take it off the buffer
+	- buffer just finished processing another packet: check to see if another in buffer
+	- packet is received: for half-duplex, when the other side needs to send a packet.
+		- put ACK into the buffer
+		- check the buffer at that point
+
+3. The event 'Packet received at B at time t’ means that *all* bits have been received at time t.
+
+NEXT STEP: 
+   1. implement static routing
+	- hardcoded routing table
+   2. put in metrics for plotting
