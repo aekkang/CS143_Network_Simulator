@@ -8,9 +8,9 @@ time = 0
 
 
 # Test case -1
-l1 = link.Link(10, 10, [])
-h1 = host.Host(l1)
-h2 = host.Host(l1)
+l1 = link.Link('L1', 10, 10, [])
+h1 = host.Host('H1', l1)
+h2 = host.Host('H2', l1)
 
 for i in "THIS IS A MESSAGE":
     pkt = packet.Packet(h1, h2, i)
