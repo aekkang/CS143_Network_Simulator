@@ -3,8 +3,6 @@
 
 # Assumes input is in this format
 
-
-
 '''
 
 n_l = number of links

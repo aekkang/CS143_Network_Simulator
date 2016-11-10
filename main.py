@@ -8,6 +8,7 @@ from parser import parse
 
 time = 0
 
+# Parser Configuration
 TEST_CASE = '1'
 INFILE = './input/test_case_' + TEST_CASE
 
