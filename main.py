@@ -4,8 +4,15 @@ import link
 import host
 import packet
 
+from parser import parse
+
 time = 0
 
+TEST_CASE = '1'
+INFILE = './input/test_case_' + TEST_CASE
+
+# Lists of each object returned from the parser
+hosts, links, flows, routers = parse(INFILE)
 
 # Test case -1
 l1 = link.Link('L1', 10, 10, [])
@@ -15,6 +22,7 @@ h2 = host.Host('H2', l1)
 for i in "THIS IS A MESSAGE":
     pkt = packet.Packet(h1, h2, i)
     enqueue(event.SendPacket(1, pkt, h1.link))
+# END TEST CASE -1 ===================================
 
 while (qempty() == False):
     event = dequeue()

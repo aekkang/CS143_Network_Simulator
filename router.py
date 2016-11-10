@@ -1,10 +1,15 @@
 class Router:
     ids = []
+    
+    r_map = {}
 
-    def __init__(self, links):
+    # Links is a list of links
+    def __init__(self, router_id, links):
         # IDs start from 1.
-        self.address = len(ids) + 1
-        ids.append(self.id)
+        self.address = len(Router.ids) + 1
+
+        self.id = router_id
+        Router.ids.append(self.id)
 
         # The routing table will be represented by a dictionary and calculated
         # using a class method.

@@ -7,7 +7,7 @@ class Host:
     addresses = []
 
     # Map of host ids to Host objects, this will be populated by the parser
-    maps = {}
+    h_map = {}
 
     # TODO: Need to decide how addresses are determined, and whether
     # they're passed in from input or generated in this constructor
@@ -24,17 +24,6 @@ class Host:
         # Each host is connected to a single link.
         self.link = link
 
-        # PARSER:
-        # Map the host_id to this object in the map
-        # maps[host_id] = self
-
-    
-    def get_host(host_id):
-        '''
-        Returns a host given a host_id, or throws a KeyError 
-        if the key is invalid
-        '''
-        return maps[host_id]
 
     def send(self):
         '''
@@ -54,3 +43,9 @@ class Host:
             return;
         notack = packet.Ack(self, pkt.sender)
         enqueue(event.SendPacket(time, notack, self.link))
+
+    def __str__(self):
+        return "<Host ID: " + str(self.id) + ", Address: " + str(self.address) +  \
+            ", Link: " + str(self.link) + ">"
+
+    __repr__ = __str__

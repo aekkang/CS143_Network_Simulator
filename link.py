@@ -4,7 +4,7 @@ class Link:
     ids = []
 
     # Map of link ids to Link objects, this will be populated by the parser
-    maps = {}
+    l_map = {}
 
     def __init__(self, link_id, rate, prop_delay, buffer_size):
         # IDs start from 1.
@@ -26,5 +26,12 @@ class Link:
 
     def buffer_empty(self):
         return len(self.buffer) == 0
+
+    def __str__(self):
+        return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
+            ", Propogation Delay: " + str(self.prop_delay) + ", Buffer size: " + \
+            str(self.buffer_size) + ">"
+
+    __repr__ = __str__
 
 
