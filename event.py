@@ -55,6 +55,6 @@ class ReceivePacket(Event):
 
     def process(self):
         enqueue(CheckBuffer(self.start_time, self.link))
-        self.packet.recipient.receive(self.packet, self.start_time);
+        self.packet.recipient.receive(self.packet, self.start_time)
 
 
