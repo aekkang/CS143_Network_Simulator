@@ -55,7 +55,12 @@ import flow as flow_class
 TEST_CASE = '1'
 INFILE = './input/test_case_' + TEST_CASE
 
+
 def next_line(f, cast='s'):
+    '''
+    Reads a line in the file and strips it of white spaces and the newline
+    character. An optional letter argument will cast it to a float or int.
+    '''
     if cast == 'f':
         return float(f.readline().strip())
     elif cast == 'i':
@@ -64,6 +69,12 @@ def next_line(f, cast='s'):
     return f.readline().strip()
 
 def parse_hosts(f, l_map):
+    '''
+    Parses the input relevant to hosts from the test case input. Since the links
+    have already been initialized at this point, the map of link_id to link 
+    object is passed in as well. We use the map to set the link that each host
+    is connected to, as well as set the entities on each "end" of a link.
+    '''
     hosts = []
     h_map = {}
 
@@ -78,6 +89,8 @@ def parse_hosts(f, l_map):
 
         link_id = next_line(f)
         # print link_id
+
+        # Get the link object with that ID from the map
         host_link = l_map[link_id]
         # print host_link
 
@@ -88,6 +101,9 @@ def parse_hosts(f, l_map):
         h_map[host_id] = h
         hosts.append(h)
 
+        # Add the host as an 'end' to the link
+        host_link.add_end(h)
+
         # print
 
     host_class.Host.h_map = h_map
@@ -95,6 +111,13 @@ def parse_hosts(f, l_map):
     return (hosts, h_map)
 
 def parse_routers(f, l_map):
+    '''
+    Parses the input relevant to hosts from the test case input. Since the links
+    have already been initialized at this point, the map of link_id to link 
+    object is passed in as well. We use the map to set the link that each host
+    is connected to, as well as set the entities on each "end" of a link.
+    '''
+
     routers = []
     r_map = {}
     r_links = []
@@ -110,12 +133,13 @@ def parse_routers(f, l_map):
         # print addr
 
         num_links = int(next_line(f))
-        # print num_links
+        # print "Num links: %d" % num_links
 
         for j in xrange(num_links):
-            link = next_line(f)
-            # print link
-            r_links.append(link)
+            link_id = next_line(f)
+            # print link_id
+            r_links.append(link_id)
+
 
         router_id = next_line(f)
         # print router_id
@@ -123,6 +147,13 @@ def parse_routers(f, l_map):
         r = router_class.Router(router_id, r_links)
         r_map[router_id] = r
         routers.append(r)
+
+        for l_id in r_links:
+            mapped_link = l_map[l_id]
+            mapped_link.add_end(r)
+
+        # Reset r_links after each iteration
+        r_links = []
 
         # print
 
