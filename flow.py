@@ -11,7 +11,7 @@ class Flow:
         self.id = flow_id
         self.source = source
         self.destination = destination
-        # Data_amnt is in megabytes.
+        # Data_amt is in megabytes.
         self.data_amt = data_amt
         self.start_time = start_time
 
@@ -29,7 +29,8 @@ class Flow:
 
         # =====TODO: put PACKET_SIZE as a global variable for reference?====
 
-        num_packets = (int)(ceil(self.data_amt * 1.0e6 / 1024))
+        num_packets = int(ceil(self.data_amt * 1.0e6 / 1024))
+
         for i in range(num_packets):
             pkt = packet.Packet(self.source, self.destination, i)
             enqueue(event.SendPacket(1, pkt, self.source.link))
