@@ -143,10 +143,10 @@ def parse_links(f):
         link_id = next_line(f)
         # print link_id
 
-        link_rate = next_line(f)
+        link_rate = next_line(f, 'f')
         # print link_rate
 
-        link_delay = next_line(f)
+        link_delay = next_line(f, 'f')
         # print link_delay
 
         link_buffer_size = next_line(f)
@@ -188,10 +188,10 @@ def parse_flows(f, h_map):
         dest_host = h_map[flow_dest]
         # print dest_host
 
-        data_amount = next_line(f)
+        data_amount = next_line(f, 'i')
         # print data_amount
 
-        flow_start_time = next_line(f)
+        flow_start_time = next_line(f, 'f')
         # print flow_start_time
 
         f = flow_class.Flow(flow_id, src_host, dest_host, 
