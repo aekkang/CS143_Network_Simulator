@@ -8,39 +8,44 @@ import flow
 
 from parser import parse
 
-
 if __name__ == "__main__":
-	# Read arguments to figure out what test case
-	TEST_CASE = sys.argv[1]
-	time = 0
 
-	# Parser Configuration
-	INFILE = './input/test_case_' + TEST_CASE
+    # Verify that a test case number was given
+    if len(sys.argv) != 2:
+        print "usage: python main.py [TEST_CASE_NO]"
+        sys.exit(-1)
+    
+    # Read arguments to figure out what test case
+    TEST_CASE = sys.argv[1]
+    time = 0
 
-	# Lists of each object returned from the parser
-	links, hosts, routers, flows = parse(INFILE)
+    # Parser Configuration
+    INFILE = './input/test_case_' + TEST_CASE
 
-	for flow in flows:
-		flow.startFlow()
+    # Lists of each object returned from the parser
+    links, hosts, routers, flows = parse(INFILE)
 
-	'''
-	# ============ Test case -1 ======================
-	l1 = link.Link('L1', 10, 10, [])
-	h1 = host.Host('H1', l1)
-	h2 = host.Host('H2', l1)
+    for flow in flows:
+        flow.startFlow()
 
-	for i in "THIS IS A MESSAGE":
-	    pkt = packet.Packet(h1, h2, i)
-	    enqueue(event.SendPacket(1, pkt, h1.link))
-	# END TEST CASE -1 ===================================
-	'''
+    '''
+    # ============ Test case -1 ======================
+    l1 = link.Link('L1', 10, 10, [])
+    h1 = host.Host('H1', l1)
+    h2 = host.Host('H2', l1)
 
-	while (qempty() == False):
-	    event = dequeue()
-	    time = event.start_time
-	    event.process()
+    for i in "THIS IS A MESSAGE":
+        pkt = packet.Packet(h1, h2, i)
+        enqueue(event.SendPacket(1, pkt, h1.link))
+    # END TEST CASE -1 ===================================
+    '''
 
-	print (time)
+    while (qempty() == False):
+        event = dequeue()
+        time = event.start_time
+        event.process()
+
+    print (time)
 '''
 trash
 
