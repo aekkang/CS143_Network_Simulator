@@ -33,4 +33,4 @@ class Flow:
 
         for i in range(num_packets):
             pkt = packet.Packet(self.source, self.destination, i)
-            enqueue(event.SendPacket(1, pkt, self.source.link))
+            enqueue(event.SendPacket(1, pkt, self.source.link, self.source))

@@ -25,6 +25,12 @@ class Link:
         assert(len(self.ends) < 2)
         self.ends.append(entity)
 
+    def get_receiver(self, sender):
+        assert(sender in self.ends)
+        if self.ends[0] == sender:
+            return self.ends[1]
+        return self.ends[0]
+
     def buffer_add(self, pkt):
         self.buffer.append(pkt)
 

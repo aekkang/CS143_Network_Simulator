@@ -9,7 +9,7 @@ import flow
 from parser import parse
 
 if __name__ == "__main__":
-
+    
     # Verify that a test case number was given
     if len(sys.argv) != 2:
         print "usage: python main.py [TEST_CASE_NO]"
@@ -33,10 +33,11 @@ if __name__ == "__main__":
     l1 = link.Link('L1', 10, 10, [])
     h1 = host.Host('H1', l1)
     h2 = host.Host('H2', l1)
+    l1.ends = [h1, h2]
 
     for i in "THIS IS A MESSAGE":
         pkt = packet.Packet(h1, h2, i)
-        enqueue(event.SendPacket(1, pkt, h1.link))
+        enqueue(event.SendPacket(1, pkt, h1.link, h1))
     # END TEST CASE -1 ===================================
     '''
 
