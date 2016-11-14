@@ -24,6 +24,11 @@ class Router:
         '''
         pass
 
+    def receive(self, pkt, time):
+        # TODO
+        print ("router drops packet");
+        pass
+
     def __str__(self):
         return "<Router ID: " + str(self.id) + ", Routing table: " + \
         str(self.routing_table) +  ", Links: " + str(self.links) + ">"

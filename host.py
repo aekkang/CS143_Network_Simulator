@@ -41,8 +41,8 @@ class Host:
         print (pkt.payload)
         if (isinstance(pkt, packet.Ack)):
             return;
-        notack = packet.Ack(self, pkt.sender)
-        enqueue(event.SendPacket(time, notack, self.link))
+        ack = packet.Ack(self, pkt.sender)
+        enqueue(event.SendPacket(time, ack, self.link, self))
 
     def __str__(self):
         return "<Host ID: " + str(self.id) + ", Address: " + str(self.address) +  \
