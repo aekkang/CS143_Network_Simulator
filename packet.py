@@ -10,7 +10,12 @@ class Packet(object):
         ''' If this is really necessary '''
         Packet.__init__(meta.sender, meta.recipient, payload, Packet.PACKET_SIZE)
 
-    # TODO: how do we handle ACKs?
+    def __str__(self):
+        return "<Packet Payload: " + str(self.payload) + ", Size: " + str(self.size) +  \
+            ", Sender: " + str(self.sender) + ", Recipient: " +  \
+            str(self.recipient) + ">"
+
+    __repr__ = __str__
 
 class Ack(Packet):
     ACK_SIZE = 64
