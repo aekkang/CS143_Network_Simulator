@@ -38,9 +38,10 @@ class Host:
         pass
 
     def receive(self, pkt, time):
-        print (pkt.payload)
+        print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
-            return;
+            return
+
         ack = packet.Ack(self, pkt.sender)
         enqueue(event.SendPacket(time, ack, self.link, self))
 
