@@ -180,7 +180,8 @@ def parse_links(f):
         link_delay = next_line(f, 'f')
         # print link_delay
 
-        link_buffer_size = next_line(f)
+        # Passing buffer size into constructor as number of bytes
+        link_buffer_size = next_line(f, 'f') * 1e3
         # print link_buffer_size
 
         l = link_class.Link(link_id, link_rate, link_delay, link_buffer_size)
