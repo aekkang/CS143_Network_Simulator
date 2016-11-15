@@ -28,7 +28,7 @@ class CheckBuffer(Event):
 
     def process(self):
         if (self.link.buf_processing or self.link.buffer_empty()):
-            return;
+            return
         else:    
             self.link.buf_processing = True
             assert(self.link.buffer_empty() == False)
@@ -37,7 +37,11 @@ class CheckBuffer(Event):
             receiver = self.link.get_receiver(src)
             enqueue(ReceivePacket(self.start_time + send_time, packet, \
                 self.link, receiver))
-            enqueue(BufferDoneProcessing(self.start_time + send_time, self.link))
+            
+            # CHECK: Need to add propogation delay?
+            # + self.link.prop_delay
+            enqueue(BufferDoneProcessing(self.start_time + \
+                packet.size / self.link.rate, self.link))
 
 class BufferDoneProcessing(Event):
     def __init__(self, start_time, link):
