@@ -15,6 +15,7 @@ class Flow:
         self.data_amt = data_amt
         self.start_time = start_time
 
+
     def __str__(self):
         return "<Flow ID: " + str(self.id) + ", Source: " + str(self.source) +  \
             ", Destination: " + str(self.destination) + ", Data Amount: " +  \
@@ -29,7 +30,7 @@ class Flow:
 
         # =====TODO: put PACKET_SIZE as a global variable for reference?====
 
-        num_packets = int(ceil(self.data_amt * 1.0e6 / 1024))
+        num_packets = int(ceil(self.data_amt * 1.0e6 / packet.Packet.PACKET_SIZE))
 
         for i in range(num_packets):
             pkt = packet.Packet(self.source, self.destination, i)
