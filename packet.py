@@ -1,10 +1,11 @@
 class Packet(object):
     PACKET_SIZE = 1024
-    def __init__(self, sender, recipient, payload, size=PACKET_SIZE):
+    def __init__(self, sender, recipient, payload, number, size=PACKET_SIZE):
         self.size = size
         self.sender = sender
         self.recipient = recipient
         self.payload = payload
+        self.number = number
 
     def NewPacket(self, meta, payload):
         ''' If this is really necessary '''
@@ -18,5 +19,5 @@ class Ack(Packet):
     # Inheritance syntax from
     # Source: http://stackoverflow.com/questions/9698614/
     #         super-raises-typeerror-must-be-type-not-classobj-for-new-style-class
-    def __init__(self, sender, recipient):
-        super(self.__class__, self).__init__(sender, recipient, "ACK", Ack.ACK_SIZE)
+    def __init__(self, sender, recipient, number):
+        super(self.__class__, self).__init__(sender, recipient, "ACK", number, Ack.ACK_SIZE)

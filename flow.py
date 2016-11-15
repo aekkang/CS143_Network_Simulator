@@ -33,5 +33,5 @@ class Flow:
         num_packets = int(ceil(self.data_amt * 1.0e6 / packet.Packet.PACKET_SIZE))
 
         for i in range(num_packets):
-            pkt = packet.Packet(self.source, self.destination, i)
+            pkt = packet.Packet(self.source, self.destination, i, i)
             enqueue(event.SendPacket(1, pkt, self.source.link, self.source))

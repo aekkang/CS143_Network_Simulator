@@ -42,7 +42,7 @@ class Host:
         if (isinstance(pkt, packet.Ack)):
             return
 
-        ack = packet.Ack(self, pkt.sender)
+        ack = packet.Ack(self, pkt.sender, pkt.number)
         enqueue(event.SendPacket(time, ack, self.link, self))
 
     def __str__(self):
