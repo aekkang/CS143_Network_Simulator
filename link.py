@@ -1,3 +1,4 @@
+import packet
 PACKET_SIZE = 1024.0
 
 class Link:
@@ -12,10 +13,15 @@ class Link:
 
         self.rate = rate       # in bytes per second
         self.prop_delay = prop_delay
+
+        # buffer size is passed in in bytes
         self.buffer_size = buffer_size
 
         self.buffer = []
         self.buf_processing = False
+
+        # In bytes
+        self.buffer_load = 0
 
         # Ends is a list that contains the object on either side of the list.
         # Its size at any time should be at most two.
@@ -31,11 +37,22 @@ class Link:
             return self.ends[1]
         return self.ends[0]
 
-    def buffer_add(self, pkt):
-        self.buffer.append(pkt)
+    def buffer_add(self, buf_obj):
+        # Buffer objects are (packet, time) tuples
+        pkt, time = buf_obj
+
+        # Drop packet if the buffer is full
+        if self.buffer_load >= self.buffer_size:
+            return
+
+        self.buffer.append(buf_obj)
+        self.buffer_load += pkt.size
+
 
     def buffer_get(self):
-        return self.buffer.pop(0)
+        pkt, time = self.buffer.pop(0)
+        self.buffer_load -= pkt.size
+        return (pkt, time)
 
     def buffer_empty(self):
         return len(self.buffer) == 0
@@ -43,7 +60,8 @@ class Link:
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
             ", Propogation Delay: " + str(self.prop_delay) + ", Buffer size: " + \
-            str(self.buffer_size) + ", Ends: " + str(self.ends) + "ENDS>\n"
+            str(self.buffer_size) + ", Buffer load: " + str(self.buffer_load) +\
+             ", Ends: " + str(self.ends) + "ENDS>\n"
 
     __repr__ = __str__
 
