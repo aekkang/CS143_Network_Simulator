@@ -26,7 +26,7 @@ class Router:
 
     def receive(self, pkt, time):
         # TODO
-        print ("router drops packet");
+        print ("router drops packet")
         pass
 
     def __str__(self):
