@@ -28,7 +28,7 @@ class Router:
         pass
 
     def receive(self, pkt, time):
-        next_link = link.Link.l_map[self.routing_table[pkt.sender.id]]
+        next_link = link.Link.l_map[self.routing_table[pkt.recipient.id]]
         enqueue(event.SendPacket(time, pkt, next_link, self))
 
     def __str__(self):
