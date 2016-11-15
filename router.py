@@ -1,3 +1,6 @@
+from pqueue import event_queue, enqueue, dequeue, qempty
+import event
+import link
 class Router:
     ids = []
     
@@ -25,9 +28,8 @@ class Router:
         pass
 
     def receive(self, pkt, time):
-        # TODO
-        print ("router drops packet")
-        pass
+        next_link = link.Link.l_map[self.routing_table[pkt.sender.id]]
+        enqueue(event.SendPacket(time, pkt, next_link, self))
 
     def __str__(self):
         return "<Router ID: " + str(self.id) + ", Routing table: " + \

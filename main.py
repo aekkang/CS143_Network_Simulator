@@ -22,8 +22,16 @@ if __name__ == "__main__":
     # Parser Configuration
     INFILE = './input/test_case_' + TEST_CASE
 
+
     # Lists of each object returned from the parser
-    links, hosts, routers, flows = parse(INFILE)
+    hosts, links, routers, flows = parse(INFILE)
+
+    # Hard-code routing tables for test-case 1
+    if TEST_CASE == '1':
+        routers[0].routing_table = {'H1': 'L0', 'H2': 'L1'}
+        routers[1].routing_table = {'H1': 'L1', 'H2': 'L3'}
+        routers[2].routing_table = {'H1': 'L2', 'H2': 'L4'}
+        routers[3].routing_table = {'H1': 'L4', 'H2': 'L5'}
 
     for flow in flows:
         flow.startFlow()
