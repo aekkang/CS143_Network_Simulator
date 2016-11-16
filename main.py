@@ -1,5 +1,5 @@
 import sys
-from pqueue import event_queue, enqueue, dequeue, qempty
+from pqueue import event_queue, enqueue, dequeue, qempty, set_global_time
 import event
 import link
 import host
@@ -17,7 +17,6 @@ if __name__ == "__main__":
     
     # Read arguments to figure out what test case
     TEST_CASE = sys.argv[1]
-    time = 0
 
     # Parser Configuration
     INFILE = './input/test_case_' + TEST_CASE
@@ -51,10 +50,10 @@ if __name__ == "__main__":
 
     while (qempty() == False):
         event = dequeue()
-        time = event.start_time
+        set_global_time(event.start_time)
         event.process()
 
-    print (time)
+    print ("SIMULATION END")
 '''
 trash
 
