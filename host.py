@@ -24,19 +24,6 @@ class Host:
         # Each host is connected to a single link.
         self.link = link
 
-
-    def send(self):
-        '''
-        Sends a packet.
-        '''
-        pass
-
-    def generate(self):
-        '''
-        Makes a packet.
-        '''
-        pass
-
     def receive(self, pkt, time):
         print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
