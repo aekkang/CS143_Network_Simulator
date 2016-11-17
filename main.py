@@ -1,5 +1,5 @@
 import sys
-from pqueue import event_queue, enqueue, dequeue, qempty, set_global_time
+from pqueue import event_queue, enqueue, dequeue, qempty, set_global_time, get_global_time, global_time
 import event
 import link
 import host
@@ -52,6 +52,8 @@ if __name__ == "__main__":
         event = dequeue()
         set_global_time(event.start_time)
         event.process()
+        for link in links:
+            link.update_metrics()
 
     print ("SIMULATION END")
 '''
