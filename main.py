@@ -5,6 +5,7 @@ import link
 import host
 import packet
 import flow
+import metrics
 
 from parser import parse
 
@@ -24,6 +25,8 @@ if __name__ == "__main__":
 
     # Lists of each object returned from the parser
     hosts, links, routers, flows = parse(INFILE)
+    metrics.link_ids = link.Link.l_map.keys()
+    metrics.link_ids.sort()
 
     # Hard-code routing tables for test-case 1
     if TEST_CASE == '1':
@@ -54,7 +57,12 @@ if __name__ == "__main__":
         event.process()
         for link in links:
             link.update_metrics()
+        #metrics.report_metrics(get_global_time())
 
+    set_global_time(10000)
+    for link in links:
+        link.update_metrics()
+    metrics.report_metrics(get_global_time())
     print ("SIMULATION END")
 '''
 trash
