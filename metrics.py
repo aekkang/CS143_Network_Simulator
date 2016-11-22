@@ -55,9 +55,13 @@ def plot_metrics():
         f_rate_num.append(flow_rate[i])
 
 
-    plt.xlim([-1, 6])
     plt.gcf().clear()
-    plt.plot(link_id_num, b_load_num, "r--", link_id_num, p_loss_num, "bs", link_id_num, f_rate_num, "g^")
+
+    ax = plt.gca()
+    ax.set_xlim((-1, 6))
+    plt.ylim(ymin=-0.05, ymax=2000)
+
+    plt.plot(link_id_num, b_load_num, "r", link_id_num, p_loss_num, "b", link_id_num, f_rate_num, "g")
     # plt.show()
     plt.draw()
     plt.pause(0.01)
