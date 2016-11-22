@@ -1,4 +1,6 @@
 import packet
+import metrics
+from pqueue import get_global_time, global_time
 PACKET_SIZE = 1024.0
 
 class Link:
@@ -27,6 +29,12 @@ class Link:
         # Its size at any time should be at most two.
         self.ends = []
 
+        # Metric lists
+        self.lost_packets = 0
+        self.aggr_flow_rate = 0
+        self.buf_occupancy = []
+        self.packet_loss = []
+
     def add_end(self, entity):
         assert(len(self.ends) < 2)
         self.ends.append(entity)
@@ -43,9 +51,11 @@ class Link:
 
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
+            self.lost_packets += 1
             return
 
         self.buffer.append(buf_obj)
+        self.aggr_flow_rate += 1
         self.buffer_load += pkt.size
 
 
@@ -56,6 +66,17 @@ class Link:
 
     def buffer_empty(self):
         return len(self.buffer) == 0
+
+    def update_metrics(self):
+        bufload = float(self.buffer_load) / self.buffer_size * 100
+        pktloss = self.lost_packets
+        flowrate = self.aggr_flow_rate / get_global_time()
+
+        metrics.update_link(self.id, bufload, pktloss, flowrate)
+
+        # To look into
+        self.buf_occupancy.append(self.buffer_load)
+        self.packet_loss.append(self.lost_packets)
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \

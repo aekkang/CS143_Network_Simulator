@@ -15,6 +15,7 @@ Functions:
 '''
 
 event_queue = Queue.PriorityQueue()
+global_time = 0.0
 
 def enqueue(evt):
     event_queue.put((evt.start_time, evt.priority, evt))
@@ -25,3 +26,10 @@ def dequeue():
 
 def qempty():
     return event_queue.empty()
+
+def set_global_time(t):
+    global global_time
+    global_time = t
+
+def get_global_time():
+    return global_time

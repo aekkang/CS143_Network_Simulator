@@ -174,10 +174,12 @@ def parse_links(f):
         link_id = next_line(f)
         # print link_id
 
-        link_rate = next_line(f, 'f')
+        # Passing link_rate into constructor as bytes per second
+        link_rate = (next_line(f, 'f')) * 1e6 / 8
         # print link_rate
 
-        link_delay = next_line(f, 'f')
+        # Passing link delay into constructor as seconds
+        link_delay = next_line(f, 'f') * 0.001
         # print link_delay
 
         # Passing buffer size into constructor as number of bytes

@@ -40,10 +40,13 @@ class Host:
     def receive(self, pkt, time):
         print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
-            return
-
-        ack = packet.Ack(self, pkt.sender)
-        enqueue(event.SendPacket(time, ack, self.link, self))
+            pkt.flow.receiveAck(pkt, time)
+        
+        else:
+            #ack = packet.Ack(self, pkt.sender, pkt.number)
+            ack = packet.makeAck(pkt)
+            enqueue(event.SendPacket(time, ack, self.link, self))
+            
 
     def __str__(self):
         return "<Host ID: " + str(self.id) + ", Address: " + str(self.address) +  \

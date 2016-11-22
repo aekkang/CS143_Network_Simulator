@@ -1,10 +1,11 @@
 import sys
-from pqueue import event_queue, enqueue, dequeue, qempty
+from pqueue import event_queue, enqueue, dequeue, qempty, set_global_time, get_global_time, global_time
 import event
 import link
 import host
 import packet
 import flow
+import metrics
 
 from parser import parse
 
@@ -17,7 +18,6 @@ if __name__ == "__main__":
     
     # Read arguments to figure out what test case
     TEST_CASE = sys.argv[1]
-    time = 0
 
     # Parser Configuration
     INFILE = './input/test_case_' + TEST_CASE
@@ -25,6 +25,8 @@ if __name__ == "__main__":
 
     # Lists of each object returned from the parser
     hosts, links, routers, flows = parse(INFILE)
+    metrics.link_ids = link.Link.l_map.keys()
+    metrics.link_ids.sort()
 
     # Hard-code routing tables for test-case 1
     if TEST_CASE == '1':
@@ -51,10 +53,17 @@ if __name__ == "__main__":
 
     while (qempty() == False):
         event = dequeue()
-        time = event.start_time
+        set_global_time(event.start_time)
         event.process()
+        for link in links:
+            link.update_metrics()
+        #metrics.report_metrics(get_global_time())
 
-    print (time)
+    set_global_time(10000)
+    for link in links:
+        link.update_metrics()
+    metrics.report_metrics(get_global_time())
+    print ("SIMULATION END")
 '''
 trash
 
