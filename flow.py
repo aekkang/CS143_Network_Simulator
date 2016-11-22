@@ -19,6 +19,9 @@ class Flow:
         self.curr_pkt = 0
         self.num_packets = int(ceil(data_amt * 1.0e6 / packet.DataPkt.PACKET_SIZE))
 
+        self.unacknowledged = {}
+        self.timeout = 1.0
+
 
     def __str__(self):
         return "<Flow ID: " + str(self.id) + ", Source: " + str(self.source) +  \
@@ -28,16 +31,19 @@ class Flow:
     __repr__ = __str__
 
     def startFlow(self):
-        # Figure out how many packets to send.
-        # This is a fixed amount P = data_amt/pkt_size
-        # Where pkt_size is 1024 bytes.
-
-        # =====TODO: put PACKET_SIZE as a global variable for reference?====
+        # While our window isn't filled yet, we create packets.
         while (self.curr_pkt < min(self.num_packets, self.window_size)):
             pkt = packet.DataPkt(self.source, self.destination, \
                 "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+            # We send the packet (put the event in the pqueue at the
+            # flow's start time.
             enqueue(event.SendPacket(self.start_time, pkt, \
                 self.source.link, self.source))
+            enqueue(event.PacketTimeout(self.start_time + self.timeout, \
+                pkt))
+            # We keep track of which packets we haven't received ACKS
+            # for yet.
+            self.unacknowledged[self.curr_pkt] = 0
             self.curr_pkt += 1
 
         '''
@@ -46,10 +52,22 @@ class Flow:
             enqueue(event.SendPacket(1, pkt, self.source.link, self.source))
         '''
     def receiveAck(self, ack, curr_time):
+        # Take the packet for which we've received an ACK off the
+        # unacknowledged list.
+        self.unacknowledged.pop(ack.number)
         if (self.curr_pkt < self.num_packets):
             pkt = packet.DataPkt(self.source, self.destination, \
                 "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+            # Send new packet + timeout event
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
+            enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+            self.unacknowledged[self.curr_pkt] = 0
             self.curr_pkt += 1
 
-
+    def handleTimeout(self, pkt, curr_time):
+        # If unacknowledged, resend the packet + its timeout event
+        if pkt.number in self.unacknowledged:
+            print 'handling packet timeout for packet ', pkt.number
+            enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
+             self.source))
+            enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
