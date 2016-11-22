@@ -1,4 +1,5 @@
 import packet
+import metrics
 from pqueue import get_global_time, global_time
 PACKET_SIZE = 1024.0
 
@@ -67,11 +68,13 @@ class Link:
         return len(self.buffer) == 0
 
     def update_metrics(self):
-        print 'buffer load at time ', get_global_time(), ': ', self.buffer_load
-        print 'packet loss at time ', get_global_time(), ': ', self.lost_packets
-        print 'aggregate flow rate through link ', self.id, \
-            'at time ', get_global_time(), ': ', \
-            self.aggr_flow_rate / get_global_time()
+        bufload = float(self.buffer_load) / self.buffer_size * 100
+        pktloss = self.lost_packets
+        flowrate = self.aggr_flow_rate / get_global_time()
+
+        metrics.update_link(self.id, bufload, pktloss, flowrate)
+
+        # To look into
         self.buf_occupancy.append(self.buffer_load)
         self.packet_loss.append(self.lost_packets)
 

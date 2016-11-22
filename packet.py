@@ -7,6 +7,12 @@ class Packet(object):
         self.number = number
         self.flow = flow
 
+    def __str__(self):
+        return "<Packet Payload: " + str(self.payload) + ", Size: " + str(self.size) +  \
+            ", Sender: " + str(self.sender) + ", Recipient: " +  \
+            str(self.recipient) + ">"
+
+    __repr__ = __str__
 
 class Ack(Packet):
     ACK_SIZE = 64
