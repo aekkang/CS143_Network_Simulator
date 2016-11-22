@@ -1,5 +1,4 @@
 class Packet(object):
-    PACKET_SIZE = 1024
     def __init__(self, sender, recipient, payload, number, size, flow):
         self.size = size
         self.sender = sender
@@ -7,10 +6,6 @@ class Packet(object):
         self.payload = payload
         self.number = number
         self.flow = flow
-
-    def NewPacket(self, meta, payload):
-        ''' If this is really necessary '''
-        Packet.__init__(meta.sender, meta.recipient, payload, Packet.PACKET_SIZE)
 
     def __str__(self):
         return "<Packet Payload: " + str(self.payload) + ", Size: " + str(self.size) +  \
@@ -32,8 +27,10 @@ class Ack(Packet):
 def makeAck(pkt):
     return Ack(pkt.recipient, pkt.sender, pkt.number, pkt.flow)
 
+
 class DataPkt(Packet):
     PACKET_SIZE = 1024
+
     def __init__(self, sender, recipient, payload, number, flow):
         super(self.__class__, self).__init__(sender, recipient, payload, \
             number, DataPkt.PACKET_SIZE, flow)

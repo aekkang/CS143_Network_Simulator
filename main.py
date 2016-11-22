@@ -1,5 +1,5 @@
 import sys
-from pqueue import event_queue, enqueue, dequeue, qempty, set_global_time, get_global_time, global_time
+from pqueue import *
 import event
 import link
 import host
