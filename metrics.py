@@ -8,22 +8,36 @@ packet_loss = {}
 flow_rate = {}
 
 link_ids = []
+times = {}
+
+colors = ['r', 'g', 'b', 'y', 'k', 'c']
+
+fig = plt.figure(figsize=(10, 10))
 
 
 def get_link_num(link_id):
     return int(link_id[1:])
 
-def update_link(link_id, bufload, pktloss, flowrate):
-    global buffer_load, packet_loss, flow_rate
-    buffer_load[link_id] = bufload
-    packet_loss[link_id] = pktloss
-    flow_rate[link_id] = flowrate
+# appends an item to the end of a list mapped from a key in a dictionary
+def dict_insert(key, d, item):
+    if key not in d:
+        d[key] = [item]
+    else:
+        d[key].append(item)
+
+def update_link(link_id, bufload, pktloss, flowrate, time):
+    global buffer_load, packet_loss, flow_rate, times
+
+    dict_insert(link_id, buffer_load, bufload)
+    dict_insert(link_id, packet_loss, pktloss)
+    dict_insert(link_id, flow_rate, flowrate)
+    dict_insert(link_id, times, time)
 
 def report_metrics(time):
     global last_report_time
-    if time > last_report_time + 0.25:
+    if time > last_report_time + 10:
         #print_metrics(time)
-        plot_metrics()
+        plot_metrics(False, time)
         last_report_time = time
 
 def print_metrics(time):
@@ -34,11 +48,10 @@ def print_metrics(time):
     for i in link_ids:
         print ("Link %s: [Buffer load: %.2f%%, Packet Loss: %d pkts, Flow rate: %.2f pkts/second]" % (i, buffer_load[i], packet_loss[i], flow_rate[i]))
     
-
     print ()
 
-def plot_metrics():
-    global buffer_load, packet_loss, flow_rate
+def plot_metrics(final, time):
+    global buffer_load, packet_loss, flow_rate, fig, times
 
     link_id_num = []
     b_load_num = []
@@ -46,23 +59,43 @@ def plot_metrics():
     f_rate_num = []
 
     for i in link_ids:
-        link_id_num.append(get_link_num(i))
 
-    for i in link_ids:
-        # print ("Link %s: [Buffer load: %.2f%%, Packet Loss: %d pkts, Flow rate: %.2f pkts/second]" % (i, buffer_load[i], packet_loss[i], flow_rate[i]))
-        b_load_num.append(buffer_load[i])
-        p_loss_num.append(packet_loss[i])
-        f_rate_num.append(flow_rate[i])
+        b_load_num = buffer_load[i]
+        p_loss_num = packet_loss[i]
+        f_rate_num = flow_rate[i]
+
+        t = times[i]
+
+        ax_bl = fig.add_subplot(311)
+
+        clr_str = colors[get_link_num(i)]
+
+        ax_bl.set_ylim((-1, 20))
+        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.02)
+        ax_bl.set_xlabel('time')
+        ax_bl.set_ylabel('buffer load')
+
+        ax_pl = fig.add_subplot(312)
+        ax_pl.set_ylim((-1, 50))
+        ax_pl.set_xlabel('time')
+        ax_pl.set_ylabel('packet loss')
+        ax_pl.plot(t, packet_loss[i], color=clr_str, label=i)
+
+        ax_fr = fig.add_subplot(313)
+        ax_fr.set_ylim((-1, 2000))
+        ax_fr.set_xlabel('time')
+        ax_fr.set_ylabel('flow rate')
+        ax_fr.plot(t, flow_rate[i], color=clr_str, label=i)
+
+        plt.legend(loc='upper right')
 
 
-    plt.gcf().clear()
+    if final is False:
+        plt.draw()
+        plt.pause(0.5)
+        plt.gcf().clear()
 
-    ax = plt.gca()
-    ax.set_xlim((-1, 6))
-    plt.ylim(ymin=-0.05, ymax=2000)
-
-    plt.plot(link_id_num, b_load_num, "r", link_id_num, p_loss_num, "b", link_id_num, f_rate_num, "g")
-    # plt.show()
-    plt.draw()
-    plt.pause(0.01)
+    else:
+        plt.draw()
+        plt.show()
 

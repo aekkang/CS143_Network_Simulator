@@ -67,12 +67,12 @@ class Link:
     def buffer_empty(self):
         return len(self.buffer) == 0
 
-    def update_metrics(self):
+    def update_metrics(self, time):
         bufload = float(self.buffer_load) / self.buffer_size * 100
         pktloss = self.lost_packets
-        flowrate = self.aggr_flow_rate / get_global_time()
+        flowrate = self.aggr_flow_rate / time
 
-        metrics.update_link(self.id, bufload, pktloss, flowrate)
+        metrics.update_link(self.id, bufload, pktloss, flowrate, time)
 
         # To look into
         self.buf_occupancy.append(self.buffer_load)
