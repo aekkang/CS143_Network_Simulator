@@ -39,8 +39,8 @@ class Flow:
             # flow's start time.
             enqueue(event.SendPacket(self.start_time, pkt, \
                 self.source.link, self.source))
-            enqueue(event.PacketTimeout(self.start_time + self.timeout, \
-                pkt))
+            #enqueue(event.PacketTimeout(self.start_time + self.timeout, \
+            #    pkt))
             # We keep track of which packets we haven't received ACKS
             # for yet.
             self.unacknowledged[self.curr_pkt] = 0
@@ -54,16 +54,32 @@ class Flow:
     def receiveAck(self, ack, curr_time):
         # Take the packet for which we've received an ACK off the
         # unacknowledged list.
-        self.unacknowledged.pop(ack.number)
-        if (self.curr_pkt < self.num_packets):
+        if self.unacknowledged.pop(ack.number, None) == None:
+            # Recieved an ack for something that's been
+            # acknowledged already = duplicate packet.
+            # Remake the missing packet.
+            'resending dropped packet ', ack.number
             pkt = packet.DataPkt(self.source, self.destination, \
-                "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
-            # Send new packet + timeout event
-            enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
-            enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
-            self.unacknowledged[self.curr_pkt] = 0
-            self.curr_pkt += 1
+                "PACKET %d" % ack.number, ack.number, self)
+            # Resend the packet.
+            enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
+             self.source))
+            #enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+            # Re-add it to our unacknowledged hash.
+            self.unacknowledged[ack.number] = 0
 
+        # If we don't have to resend a packet, we can slide our window
+        # over to send new packets.
+        else:    
+            if (self.curr_pkt < self.num_packets):
+                pkt = packet.DataPkt(self.source, self.destination, \
+                    "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+                # Send new packet + timeout event
+                enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
+                #enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+                self.unacknowledged[self.curr_pkt] = 0
+                self.curr_pkt += 1
+    '''
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
         if pkt.number in self.unacknowledged:
@@ -71,3 +87,4 @@ class Flow:
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
              self.source))
             enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+    '''
