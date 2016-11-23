@@ -51,11 +51,6 @@ def report_metrics(time):
 def plot_metrics(final, time):
     global buffer_load, packet_loss, flow_rate, fig, times
 
-    link_id_num = []
-    b_load_num = []
-    p_loss_num = []
-    f_rate_num = []
-
     for i in link_ids:
 
         t = times[i]
