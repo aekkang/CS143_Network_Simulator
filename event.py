@@ -11,7 +11,7 @@ class Event:
 class SendPacket(Event):
     def __init__(self, start_time, packet, link, sender):
         self.start_time = start_time
-        self.priority = 5
+        self.priority = 5 + (1 - 1.0/(packet.number + 1))
         self.link = link
         self.packet = packet
         self.sender = sender
