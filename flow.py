@@ -20,7 +20,7 @@ class Flow:
 
         self.window_size = 100
         self.curr_pkt = 0
-        self.num_packets = int(ceil(data_amt * 1.0e4 / packet.DataPkt.PACKET_SIZE))
+        self.num_packets = int(ceil(data_amt * 1.0e6 / packet.DataPkt.PACKET_SIZE))
 
         self.unacknowledged = {}
         self.timeout = 1.0
