@@ -57,12 +57,7 @@ if __name__ == "__main__":
         event.process()
         for link in links:
             link.update_metrics()
-        #metrics.report_metrics(get_global_time())
-
-    set_global_time(10000)
-    for link in links:
-        link.update_metrics()
-    metrics.report_metrics(get_global_time())
+        metrics.report_metrics(get_global_time())
     print ("SIMULATION END")
 '''
 trash
