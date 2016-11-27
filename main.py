@@ -29,7 +29,7 @@ if __name__ == "__main__":
     metrics.link_ids.sort()
 
     # Hard-code routing tables for test-case 1
-    if TEST_CASE == '1':
+    if TEST_CASE in ['1', '3']:
         routers[0].routing_table = {'H1': 'L0', 'H2': 'L1'}
         routers[1].routing_table = {'H1': 'L1', 'H2': 'L3'}
         routers[2].routing_table = {'H1': 'L2', 'H2': 'L4'}
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         event.process()
         for link in links:
             link.update_metrics()
-        metrics.report_metrics(get_global_time())
+        #metrics.report_metrics(get_global_time())
     print ("SIMULATION END")
 '''
 trash
