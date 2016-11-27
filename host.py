@@ -38,14 +38,14 @@ class Host:
             # (next_pkt = pkt.number) or packets out of order
             # (next_pkt < pkt.number).
             # If first packet from flow, then set expected_pkt to 0.
-            if self.expected_pkt.setdefault(pkt.flow, 0) <= pkt.number:
+            if self.expected_pkt.setdefault(pkt.flow.id, 0) <= pkt.number:
 
                 # If the packet is the one we're expecting,
                 # increment its value in next_packet.
-                if self.expected_pkt[pkt.flow] == pkt.number:
-                    self.expected_pkt[pkt.flow] += 1
+                if self.expected_pkt[pkt.flow.id] == pkt.number:
+                    self.expected_pkt[pkt.flow.id] += 1
 
-                ack = packet.makeAck(pkt, self.expected_pkt[pkt.flow])
+                ack = packet.makeAck(pkt.flow, self.expected_pkt[pkt.flow.id])
                 enqueue(event.SendPacket(time, ack, self.link, self))
 
             # If the incoming packet has a number LESS THAN the one
