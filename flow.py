@@ -7,6 +7,9 @@ class Flow:
 
     f_map = {}
 
+    INITIAL_SEND = 0
+    DUP_SEND = 1
+
     def __init__(self, flow_id, source, destination, data_amt, start_time):
         self.id = flow_id
         self.source = source
@@ -35,15 +38,17 @@ class Flow:
         while (self.curr_pkt < min(self.num_packets, self.window_size)):
             pkt = packet.DataPkt(self.source, self.destination, \
                 "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+
             # We send the packet (put the event in the pqueue at the
             # flow's start time.
             enqueue(event.SendPacket(self.start_time, pkt, \
                 self.source.link, self.source))
-            #enqueue(event.PacketTimeout(self.start_time + self.timeout, \
-            #    pkt))
+            
+            enqueue(event.PacketTimeout(self.start_time + self.timeout, pkt))
+
             # We keep track of which packets we haven't received ACKS
             # for yet.
-            self.unacknowledged[self.curr_pkt] = 0
+            self.unacknowledged[self.curr_pkt] = Flow.INITIAL_SEND
             self.curr_pkt += 1
 
         '''
@@ -70,39 +75,59 @@ class Flow:
 
         # If that packet has already been acknowledged (i.e. not in
         # the HT) then we have a duplicate ACK for packet ack.number.
-        if self.unacknowledged.pop(ack.number - 1, None) == None:
-            # Remake the missing packet.
-            print 'resending dropped packet ', ack.number
-            pkt = packet.DataPkt(self.source, self.destination, \
-                "PACKET %d" % ack.number, ack.number, self)
+        if self.unacknowledged.get(ack.number - 1, None) == None:
 
-            # Resend the packet.
-            enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
-             self.source))
-            #enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
-            # Re-add it to our unacknowledged hash.
-            self.unacknowledged[ack.number] = 0
-            
-            # Set the curr_pkt to the next packet that was dropped.
-            self.curr_pkt = ack.number + 1
+            # If we receive a duplicate ACK we need to resend a packet
+            if self.unacknowledged.get(ack.number) == Flow.INITIAL_SEND:
+
+                # Remake the missing packet.
+                print 'resending dropped packet ', ack.number
+
+                print "checking for packet %d in map" % ack.number
+                print self.unacknowledged.get(ack.number)
+
+                pkt = packet.DataPkt(self.source, self.destination, \
+                    "PACKET %d" % ack.number, ack.number, self)
+
+                # Resend the packet.
+                enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
+                 self.source))
+                enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+
+                # Re-add it to our unacknowledged hash.
+                self.unacknowledged[ack.number] = Flow.DUP_SEND
+                
+                # Set the curr_pkt to the next packet that was dropped.
+                self.curr_pkt = ack.number + 1
+
+                print "current packet ", self.curr_pkt
 
         # If we don't have to resend a packet, we can slide our window
         # over to send new packets.
         else:   
+            # We can remove the correctly acknowledged packet from our
+            # unacknowledged packets map
+            self.unacknowledged.pop(ack.number - 1)
+
+            print "sliding window, curr_pkt is ", self.curr_pkt
+
             if (self.curr_pkt < self.num_packets):
                 pkt = packet.DataPkt(self.source, self.destination, \
                     "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+
                 # Send new packet + timeout event
                 enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
-                #enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
-                self.unacknowledged[self.curr_pkt] = 0
+                enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+
+                self.unacknowledged[self.curr_pkt] = Flow.INITIAL_SEND
                 self.curr_pkt += 1
-    '''
+    
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
         if pkt.number in self.unacknowledged:
             print 'handling packet timeout for packet ', pkt.number
+            print 'time is ', curr_time
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
              self.source))
             enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
-    '''
+    
