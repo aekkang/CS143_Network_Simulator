@@ -24,8 +24,8 @@ class Ack(Packet):
         super(self.__class__, self).__init__(sender, recipient, \
             "ACK %d" % number, number, Ack.ACK_SIZE, flow)
 
-def makeAck(pkt, pkt_number):
-    return Ack(pkt.recipient, pkt.sender, pkt_number, pkt.flow)
+def makeAck(flow, pkt_number):
+    return Ack(flow.destination, flow.source, pkt_number, flow)
 
 
 class DataPkt(Packet):
