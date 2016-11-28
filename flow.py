@@ -106,6 +106,9 @@ class Flow:
                 # Set the curr_pkt to the next packet that was dropped.
                 self.curr_pkt = ack.number + 1
 
+                # Edit the start time logged in the unack map.
+                self.unacknowledged[ack.number - 1] = curr_time
+
                 # Halve our window size.
                 self.window_size = self.window_size / 2
                 print "current packet ", self.curr_pkt
