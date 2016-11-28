@@ -118,6 +118,10 @@ class Flow:
         else:   
             # We can remove the correctly acknowledged packet from our
             # unacknowledged packets map
+            for pktnum in self.unacknowledged:
+                if pktnum < ack.number - 1:
+                    self.unacknowledged.pop(pktnum)
+
             self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
             # Update our min_RTT
