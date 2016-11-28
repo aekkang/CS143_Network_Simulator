@@ -228,10 +228,10 @@ def parse_flows(f, h_map):
         flow_start_time = next_line(f, 'f')
         # print flow_start_time
 
-        f = flow_class.Flow(flow_id, src_host, dest_host, 
+        flow = flow_class.Flow(flow_id, src_host, dest_host, 
                             data_amount, flow_start_time)
-        f_map[flow_id] = f
-        flows.append(f)
+        f_map[flow_id] = flow
+        flows.append(flow)
 
         # print
 
