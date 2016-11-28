@@ -18,12 +18,19 @@ class Flow:
         self.data_amt = data_amt
         self.start_time = start_time
 
-        self.window_size = 100
+        self.window_size = 1
         self.curr_pkt = 0
         self.num_packets = int(ceil(data_amt * 1.0e6 / packet.DataPkt.PACKET_SIZE))
 
         self.unacknowledged = {}
         self.timeout = 1.0
+        self.dup_pkt = None
+
+        # For TCP FAST
+        self.min_RTT = 100.0
+        self.curr_RTT = 0.0
+        self.GAMMA = 0.5
+        self.ALPHA = 15
 
 
     def __str__(self):
@@ -48,7 +55,7 @@ class Flow:
 
             # We keep track of which packets we haven't received ACKS
             # for yet.
-            self.unacknowledged[self.curr_pkt] = Flow.INITIAL_SEND
+            self.unacknowledged[self.curr_pkt] = self.start_time
             self.curr_pkt += 1
 
         '''
@@ -76,9 +83,11 @@ class Flow:
         # If that packet has already been acknowledged (i.e. not in
         # the HT) then we have a duplicate ACK for packet ack.number.
         if self.unacknowledged.get(ack.number - 1, None) == None:
-
             # If we receive a duplicate ACK we need to resend a packet
-            if self.unacknowledged.get(ack.number) == Flow.INITIAL_SEND:
+            if self.dup_pkt != ack.number:
+
+                # Update what our current duplicate we're handling is.
+                self.dup_pkt = ack.number
 
                 # Remake the missing packet.
                 print 'resending dropped packet ', ack.number
@@ -93,34 +102,46 @@ class Flow:
                 enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
                  self.source))
                 enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
-
-                # Re-add it to our unacknowledged hash.
-                self.unacknowledged[ack.number] = Flow.DUP_SEND
                 
                 # Set the curr_pkt to the next packet that was dropped.
                 self.curr_pkt = ack.number + 1
 
+                # Halve our window size.
+                self.window_size = self.window_size / 2
                 print "current packet ", self.curr_pkt
 
-        # If we don't have to resend a packet, we can slide our window
-        # over to send new packets.
+        # If we've successfully received an ACK for an UNACK'd packet,
+        # we remove the packet from the map and update our RTT estimate.
         else:   
             # We can remove the correctly acknowledged packet from our
             # unacknowledged packets map
-            self.unacknowledged.pop(ack.number - 1)
+            self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
-            print "sliding window, curr_pkt is ", self.curr_pkt
+            # Update our min_RTT
+            if self.curr_RTT < self.min_RTT:
+                self.min_RTT = self.curr_RTT
 
-            if (self.curr_pkt < self.num_packets):
-                pkt = packet.DataPkt(self.source, self.destination, \
-                    "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+            # TCP FAST: Calculate our new window size
+            self.window_size = min(2 * self.window_size, (1 - self.GAMMA) * \
+                self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
+                self.window_size + self.ALPHA))
 
-                # Send new packet + timeout event
-                enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
-                enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+            print "new window size is ", self.window_size
 
-                self.unacknowledged[self.curr_pkt] = Flow.INITIAL_SEND
-                self.curr_pkt += 1
+        window_space = int(self.window_size - len(self.unacknowledged))
+        if window_space > 0:
+            for i in xrange(window_space):
+                if (self.curr_pkt < self.num_packets):
+                    pkt = packet.DataPkt(self.source, self.destination, \
+                        "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
+
+                    # Send new packet + timeout event
+                    enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
+                    enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+
+                    self.unacknowledged[self.curr_pkt] = curr_time
+                    self.curr_pkt += 1
+        print "curr_pkt is ", self.curr_pkt
     
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
