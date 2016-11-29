@@ -86,7 +86,7 @@ def plot_metrics(final, time):
         ax_fr.plot(t, flow_rate[i], color=clr_str, label=i)
 
         ax_pl = fig.add_subplot(612)
-        ax_pl.set_ylim((-1, 50))
+        ax_pl.set_ylim((-1, 100))
         ax_pl.set_xlabel('time')
         ax_pl.set_ylabel('packet loss')
         ax_pl.plot(t, packet_loss[i], color=clr_str, label=i)
@@ -99,11 +99,6 @@ def plot_metrics(final, time):
 
         ax_bl.set_xlabel('time')
         ax_bl.set_ylabel('buffer load')
-
-
-
-
-
 
     for i in flow_ids:
 

@@ -8,7 +8,8 @@ class Flow:
     f_map = {}
 
     ### TODO: make this an input argument
-    TCP_ALG = 'fast'
+    TCP_ALG = 'reno'
+    # TCP_ALG = 'fast'
 
     def __init__(self, flow_id, source, destination, data_amt, start_time):
         self.id = flow_id
@@ -137,7 +138,7 @@ class Flow:
                     self.unacknowledged.pop(pktnum)
 
             self.adjust_window(ack, curr_time, self.TCP_ALG)
-            print "new window size is ", self.window_size
+            # print "new window size is ", self.window_size
 
         if self.curr_pkt == self.num_packets:
             self.done_sending = True
@@ -158,15 +159,17 @@ class Flow:
                 self.curr_pkt += 1
                 self.sent_packets += 1
 
-        if self.curr_pkt % 10 == 0:
+        if self.curr_pkt % 100 == 0:
             print "curr_pkt is ", self.curr_pkt
+            print "flow ", self.id
 
     def update_metrics(self, time):
         send_rate = self.sent_packets / (time + 1)
         rec_rate = self.received_packets / (time + 1)
 
-        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, self.window_size,
-            time)
+        if self.done_sending is False:
+            metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, 
+                self.window_size, time)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \
@@ -256,7 +259,7 @@ class Flow:
             # increase the window size by 1 / W per ACK.
             else:
                 self.window_size = self.window_size + (1.0 / self.window_size)
-                print 'window size in congestion avoidance is: ', self.window_size
+                # print 'window size in congestion avoidance is: ', self.window_size
 
     
     def handleTimeout(self, pkt, curr_time):
