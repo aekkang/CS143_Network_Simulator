@@ -13,7 +13,7 @@ class Event:
 class SendPacket(Event):
     def __init__(self, start_time, packet, link, sender):
         self.start_time = start_time
-        self.priority = 5
+        self.priority = 5 + (1 - 1.0/(packet.number + 1))
         self.link = link
         self.packet = packet
         self.sender = sender
@@ -67,7 +67,6 @@ class ReceivePacket(Event):
         enqueue(CheckBuffer(self.start_time, self.link,))
         self.receiver.receive(self.packet, self.start_time)
 
-
 class RtPktTimeout(Event):
     def __init__(self, start_time, router, rtpkt):
         self.start_time = start_time
@@ -108,3 +107,14 @@ class Reroute(Event):
             print r_id + str(router.Router.r_map[r_id].routing_table)
         '''
         print ("==================================")
+
+class PacketTimeout(Event):
+    def __init__(self, start_time, packet):
+        self.start_time = start_time
+        self.packet = packet
+        self.priority = 3
+
+    def process(self):
+        self.packet.flow.handleTimeout(self.packet, self.start_time)
+
+
