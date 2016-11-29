@@ -36,6 +36,8 @@ class Link:
 
         # Metric lists
         self.lost_packets = 0
+        self.prev_lost_packets = 0
+        self.prev_packetloss = 0
         self.aggr_flow_rate = 0
         self.prev_flow_rate = 0
         self.prev_time = 0
@@ -58,6 +60,7 @@ class Link:
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
             self.lost_packets += 1
+            print ("Dropped a packet. Now at: %d" % self.lost_packets)
             return
 
         self.buffer.append(buf_obj)
@@ -79,14 +82,24 @@ class Link:
 
     def update_metrics(self, time):
         bufload = self.buffer_pkts
-        pktloss = self.lost_packets
+        pktloss = self.lost_packets - self.prev_lost_packets
+        self.prev_lost_packets = self.lost_packets
+        #pktloss = self.prev_packetloss
 
         if time >= self.prev_time + 0.1:
             link_rate = (self.aggr_flow_rate - self.prev_flow_rate)\
                         / (1024 ** 2 * (time - self.prev_time))
+
+
+            #pktloss = float(self.lost_packets - self.prev_lost_packets) / (time - self.prev_time)
+            #self.prev_lost_packets = self.lost_packets
+            #self.prev_packetloss = pktloss
+
             self.prev_time = time
             self.prev_flow_rate = self.aggr_flow_rate
             update_link_rate = True
+
+            
         else:
             link_rate = 0
             update_link_rate = False

@@ -104,7 +104,7 @@ def plot_metrics(final, time):
         ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
 
         ax_pl = fig.add_subplot(613)
-        ax_pl.set_ylim((-1, 100))
+        #ax_pl.set_ylim((-1, 100))
         ax_pl.set_xlabel('time (s)')
         ax_pl.set_ylabel('packet loss\n(pkts)')
         ax_pl.plot(t, packet_loss[i], color=clr_str, label=i)
