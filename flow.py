@@ -136,18 +136,19 @@ class Flow:
             print "new window size is ", self.window_size
 
         window_space = int(self.window_size - len(self.unacknowledged))
-        if window_space > 0:
-            for i in xrange(window_space):
-                if (self.curr_pkt < self.num_packets):
-                    pkt = packet.DataPkt(self.source, self.destination, \
-                        "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
 
-                    # Send new packet + timeout event
-                    enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
-                    enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+        for i in xrange(window_space):
+            if (self.curr_pkt < self.num_packets):
+                pkt = packet.DataPkt(self.source, self.destination, \
+                    "PACKET %d" % self.curr_pkt, self.curr_pkt, self)
 
-                    self.unacknowledged[self.curr_pkt] = curr_time
-                    self.curr_pkt += 1
+                # Send new packet + timeout event
+                enqueue(event.SendPacket(curr_time, pkt, self.source.link, self.source))
+                enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+
+                self.unacknowledged[self.curr_pkt] = curr_time
+                self.curr_pkt += 1
+                
         print "curr_pkt is ", self.curr_pkt
     
     def handleTimeout(self, pkt, curr_time):
