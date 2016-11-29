@@ -2,6 +2,7 @@ from math import ceil
 from pqueue import event_queue, enqueue, get_global_time, qempty
 import packet
 import event
+import metrics
 
 class Flow:
 
@@ -34,6 +35,12 @@ class Flow:
         self.GAMMA = 0.5
         self.ALPHA = 15
 
+        self.last_dup_time = 0
+
+        # Metric lists
+        self.sent_packets = 0
+        self.received_packets = 0
+
 
     def __str__(self):
         return "<Flow ID: " + str(self.id) + ", Source: " + str(self.source) +  \
@@ -59,6 +66,7 @@ class Flow:
             # for yet.
             self.unacknowledged[self.curr_pkt] = self.start_time
             self.curr_pkt += 1
+            self.sent_packets += 1
 
         '''
         for i in range(num_packets):
@@ -120,6 +128,7 @@ class Flow:
         # If we've successfully received an ACK for an UNACK'd packet,
         # we remove the packet from the map and update our RTT estimate.
         else:   
+            self.received_packets += 1
             # We can remove the correctly acknowledged packet from our
             # unacknowledged packets map
             if self.curr_pkt >= self.num_packets:
@@ -128,9 +137,10 @@ class Flow:
             for pktnum in self.unacknowledged.keys():
                 if pktnum < ack.number - 1:
                     self.unacknowledged.pop(pktnum)
+                    
 
             self.adjust_window(ack, curr_time, False, self.TCP_ALG)
-            print "new window size is ", self.window_size
+            # print "new window size is ", self.window_size
 
         window_space = max(int(self.window_size - len(self.unacknowledged)), 0)
 
@@ -145,8 +155,17 @@ class Flow:
 
                 self.unacknowledged[self.curr_pkt] = curr_time
                 self.curr_pkt += 1
+                self.sent_packets += 1
+
         if self.curr_pkt % 100 == 0:
             print "curr_pkt is ", self.curr_pkt
+
+    def update_metrics(self, time):
+        send_rate = self.sent_packets / (time + 1)
+        rec_rate = self.received_packets / (time + 1)
+
+        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, self.window_size,
+            time)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \
@@ -156,13 +175,18 @@ class Flow:
     def adjust_window(self, ack, curr_time, dup_ack, tcp_algo='fast'):
         if dup_ack is True:
             # Duplicate ack, halve window size
-            self.window_size /= 2
+            print "duplicate ack: ", ack.number
+            if curr_time - self.last_dup_time > 0.2:
+                self.window_size /= 2
+                self.last_dup_time = curr_time
 
         elif dup_ack is False and tcp_algo == 'fast':
             self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
             # Update our min_RTT
             if self.curr_RTT < self.min_RTT:
+                self.min_RTT = self.curr_RTT
+            if self.min_RTT < 0.0005:
                 self.min_RTT = self.curr_RTT
 
             # TCP FAST: Calculate our new window size
@@ -181,4 +205,5 @@ class Flow:
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
              self.source))
             enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
+            self.unacknowledged[pkt.number] = curr_time
     

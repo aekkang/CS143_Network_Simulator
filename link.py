@@ -57,7 +57,8 @@ class Link:
             return
 
         self.buffer.append(buf_obj)
-        self.aggr_flow_rate += 1
+        if isinstance(pkt, packet.DataPkt):
+            self.aggr_flow_rate += 1
         self.buffer_load += pkt.size
 
 
