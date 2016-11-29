@@ -87,6 +87,7 @@ class Reroute(Event):
         self.priority = 5  #rerouting should happen after any simultaneous events
 
     def process(self):
+        print ("==================================")
         print ("rerouting round %d" % self.round_no)
         link.set_linkcosts()
         router.reset_bf(self.start_time, self.round_no)

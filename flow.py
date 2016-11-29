@@ -160,8 +160,7 @@ class Flow:
                 self.sent_packets += 1
 
         if self.curr_pkt % 100 == 0:
-            print "curr_pkt is ", self.curr_pkt
-            print "flow ", self.id
+            print "current packet is %d from flow %s" % (self.curr_pkt, self.id)
 
 
     def update_metrics(self, time):
@@ -186,7 +185,7 @@ class Flow:
             self.window_size += 3
 
         # Remake the missing packet.
-        print 'resending dropped packet ', ack.number
+        print '\tresending dropped packet', ack.number
 
         #print "checking for packet %d in map" % ack.number
         #print self.unacknowledged.get(ack.number)
@@ -204,8 +203,8 @@ class Flow:
 
         # Edit the start time logged in the unack map.
         self.unacknowledged[ack.number - 1] = curr_time
-        print "\tnew window size is ", self.window_size
-        print "\tcurrent packet ", self.curr_pkt
+        print "\tnew window size is", self.window_size
+        # print "current packet", self.curr_pkt
 
 
     def fast_recovery(self, curr_time, tcp_algo='fast'):
