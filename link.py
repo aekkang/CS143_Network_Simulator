@@ -32,8 +32,7 @@ class Link:
         # Metric lists
         self.lost_packets = 0
         self.aggr_flow_rate = 0
-        self.buf_occupancy = []
-        self.packet_loss = []
+
 
     def add_end(self, entity):
         assert(len(self.ends) < 2)
@@ -73,10 +72,6 @@ class Link:
         flowrate = self.aggr_flow_rate / time
 
         metrics.update_link(self.id, bufload, pktloss, flowrate, time)
-
-        # To look into
-        self.buf_occupancy.append(self.buffer_load)
-        self.packet_loss.append(self.lost_packets)
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
