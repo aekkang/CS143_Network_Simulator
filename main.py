@@ -92,6 +92,6 @@ if __name__ == "__main__":
 
         metrics.report_metrics(get_global_time())
     
-    #metrics.plot_metrics(True, get_global_time())
+    metrics.plot_metrics(True, get_global_time())
 
     print ("SIMULATION END")

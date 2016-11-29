@@ -107,7 +107,7 @@ def plot_metrics(final, time):
 
         ax_sr = fig.add_subplot(614)
         ax_sr.plot(t, send_rate[i], color=clr_str, label=i)
-        ax_sr.plot(t, receive_rate[i], color='lightsage', label=i)
+        ax_sr.plot(t, receive_rate[i], color='green', label=i)
         ax_sr.set_xlabel('time')
         ax_sr.set_ylabel('send/receieve rate')
 
