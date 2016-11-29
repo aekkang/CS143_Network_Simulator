@@ -17,6 +17,7 @@ class Flow:
         # Data_amt is in megabytes.
         self.data_amt = data_amt
         self.start_time = start_time
+        self.protocol = 'FAST'
 
         self.window_size = 1
         self.curr_pkt = 0
@@ -27,10 +28,11 @@ class Flow:
         self.dup_pkt = None
 
         # For TCP FAST
-        self.min_RTT = 100.0
-        self.curr_RTT = 0.0
+        self.min_RTT = 1.0 # in seconds?
+        self.curr_RTT = 1.0
         self.GAMMA = 0.5
         self.ALPHA = 15
+        self.update_period = 0.02
 
 
     def __str__(self):
@@ -57,6 +59,8 @@ class Flow:
             # for yet.
             self.unacknowledged[self.curr_pkt] = self.start_time
             self.curr_pkt += 1
+        #if self.protocol == 'FAST':
+            #enqueue(event.UpdateWindow(self.start_time + self.update_period, self))
 
         '''
         for i in range(num_packets):
@@ -118,7 +122,7 @@ class Flow:
         else:   
             # We can remove the correctly acknowledged packet from our
             # unacknowledged packets map
-            for pktnum in self.unacknowledged:
+            for pktnum in self.unacknowledged.keys():
                 if pktnum < ack.number - 1:
                     self.unacknowledged.pop(pktnum)
 
@@ -128,13 +132,8 @@ class Flow:
             if self.curr_RTT < self.min_RTT:
                 self.min_RTT = self.curr_RTT
 
-            # TCP FAST: Calculate our new window size
-            self.window_size = min(2 * self.window_size, (1 - self.GAMMA) * \
-                self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
-                self.window_size + self.ALPHA))
-
-            print "new window size is ", self.window_size
-
+            self.updateWindow()
+        
         window_space = int(self.window_size - len(self.unacknowledged))
         if window_space > 0:
             for i in xrange(window_space):
@@ -150,6 +149,14 @@ class Flow:
                     self.curr_pkt += 1
         print "curr_pkt is ", self.curr_pkt
     
+    def updateWindow(self):
+        # TCP FAST: Calculate our new window size
+        self.window_size = min(2 * self.window_size, (1 - self.GAMMA) * \
+            self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
+            self.window_size + self.ALPHA))
+
+        print "new window size is ", self.window_size
+
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
         if pkt.number in self.unacknowledged:
