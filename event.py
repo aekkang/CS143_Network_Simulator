@@ -62,7 +62,7 @@ class ReceivePacket(Event):
         self.receiver = receiver
 
     def process(self):
-        enqueue(CheckBuffer(self.start_time, self.link))
+        enqueue(CheckBuffer(self.start_time, self.link,))
         self.receiver.receive(self.packet, self.start_time)
 
 
@@ -74,20 +74,5 @@ class PacketTimeout(Event):
 
     def process(self):
         self.packet.flow.handleTimeout(self.packet, self.start_time)
-'''
-# Used specifically for TCP FAST.
-class UpdateWindow(Event):
-    def __init__(self, start_time, flow):
-        self.start_time = start_time
-        self.priority = 3
-        self.flow = flow
-
-    def process(self):
-        print 'periodically updating window'
-        self.flow.updateWindow()
-        enqueue(UpdateWindow(self.start_time + self.flow.update_period, \
-            self.flow))
-'''
-
 
 
