@@ -25,6 +25,7 @@ class Link:
 
         # In bytes
         self.buffer_load = 0
+        self.buffer_pkts = 0
 
         # Bellman-Ford link cost
         self.bf_lcost = 1
@@ -36,6 +37,8 @@ class Link:
         # Metric lists
         self.lost_packets = 0
         self.aggr_flow_rate = 0
+        self.prev_flow_rate = 0
+        self.prev_time = 0
 
 
     def add_end(self, entity):
@@ -59,13 +62,15 @@ class Link:
 
         self.buffer.append(buf_obj)
         if isinstance(pkt, packet.DataPkt):
-            self.aggr_flow_rate += 1
+            self.aggr_flow_rate += pkt.size * 8
         self.buffer_load += pkt.size
+        self.buffer_pkts += 1
 
 
     def buffer_get(self):
         pkt, time = self.buffer.pop(0)
         self.buffer_load -= pkt.size
+        self.buffer_pkts -= 1
         self.size_in_transit = pkt.size
         return (pkt, time)
 
@@ -73,12 +78,20 @@ class Link:
         return len(self.buffer) == 0
 
     def update_metrics(self, time):
-        bufload = float(self.buffer_load) / self.buffer_size * 100
+        bufload = self.buffer_pkts
         pktloss = self.lost_packets
 
-        flowrate = self.aggr_flow_rate / (time + 1)
-
-        metrics.update_link(self.id, bufload, pktloss, flowrate, time)
+        if time >= self.prev_time + 0.1:
+            link_rate = (self.aggr_flow_rate - self.prev_flow_rate)\
+                        / (1024 ** 2 * (time - self.prev_time))
+            self.prev_time = time
+            self.prev_flow_rate = self.aggr_flow_rate
+            update_link_rate = True
+        else:
+            link_rate = 0
+            update_link_rate = False
+                  
+        metrics.update_link(self.id, bufload, pktloss, link_rate, time, update_link_rate)
 
     def set_linkcost(self):
         self.bf_lcost = self.buffer_load + 1

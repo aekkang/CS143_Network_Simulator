@@ -1,5 +1,10 @@
 import matplotlib.pyplot as plt
 
+# Get rid of matplotlib warnings
+import warnings
+import matplotlib.cbook
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+
 last_report_time = -1
 
 # Link metrics
@@ -17,6 +22,7 @@ link_ids = []
 flow_ids = []
 
 l_times = {}
+lr_times = {}
 f_times = {}
 
 colors = ['r', 'g', 'b', 'y', 'k', 'c', 'peru', 'fuchsia', 'teal', 'darkkhaki']
@@ -34,13 +40,15 @@ def dict_insert(key, d, item):
     else:
         d[key].append(item)
 
-def update_link(link_id, bufload, pktloss, flowrate, time):
+def update_link(link_id, bufload, pktloss, flowrate, time, update_link_rate):
     global buffer_load, packet_loss, flow_rate, l_times
 
     dict_insert(link_id, buffer_load, bufload)
     dict_insert(link_id, packet_loss, pktloss)
-    dict_insert(link_id, flow_rate, flowrate)
     dict_insert(link_id, l_times, time)
+    if update_link_rate:
+        dict_insert(link_id, flow_rate, flowrate)
+        dict_insert(link_id, lr_times, time)
 
 def update_flow(flow_id, send_r, rec_r, rtts, w_size, time):
     global send_rate, receive_rate, round_trip_time
@@ -80,25 +88,24 @@ def plot_metrics(final, time):
         clr_str = colors[get_num(i)]
 
         ax_fr = fig.add_subplot(611)
-        ax_fr.set_ylim((-1, 2000))
-        ax_fr.set_xlabel('time')
-        ax_fr.set_ylabel('link rate')
-        ax_fr.plot(t, flow_rate[i], color=clr_str, label=i)
+        ax_fr.set_ylim((-1, 10))
+        ax_fr.set_xlabel('time (s)')
+        ax_fr.set_ylabel('link rate\n(Mbps)')
+        ax_fr.plot(lr_times[i], flow_rate[i], color=clr_str, label=i)
 
-        ax_pl = fig.add_subplot(612)
+        ax_bl = fig.add_subplot(612)
+        ax_bl.set_ylim((-1, 100))
+        ax_bl.set_xlabel('time (s)')
+        ax_bl.set_ylabel('buffer load\n(pkts)')
+        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
+
+        ax_pl = fig.add_subplot(613)
         ax_pl.set_ylim((-1, 100))
-        ax_pl.set_xlabel('time')
-        ax_pl.set_ylabel('packet loss')
+        ax_pl.set_xlabel('time (s)')
+        ax_pl.set_ylabel('packet loss\n(pkts)')
         ax_pl.plot(t, packet_loss[i], color=clr_str, label=i)
 
         plt.legend(loc='upper right', prop={'size': 9})
-
-        ax_bl = fig.add_subplot(613)
-        ax_bl.set_ylim((-1, 100))
-        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
-
-        ax_bl.set_xlabel('time')
-        ax_bl.set_ylabel('buffer load')
 
     for i in flow_ids:
 
@@ -108,13 +115,13 @@ def plot_metrics(final, time):
         ax_sr = fig.add_subplot(614)
         ax_sr.plot(t, send_rate[i], color=clr_str, label=i)
         ax_sr.plot(t, receive_rate[i], color='green', label=i)
-        ax_sr.set_xlabel('time')
+        ax_sr.set_xlabel('time (s)')
         ax_sr.set_ylabel('send/receieve rate')
 
         ax_ws = fig.add_subplot(615)
         ax_ws.plot(t, window_sizes[i], color=clr_str, label=i, lw=0.2)
-        ax_ws.set_xlabel('time')
-        ax_ws.set_ylabel('window size')
+        ax_ws.set_xlabel('time (s)')
+        ax_ws.set_ylabel('window size\n(pkts)')
 
         # avg_ws = []
         # sum_ = 0
@@ -125,7 +132,7 @@ def plot_metrics(final, time):
 
         ax_rtt = fig.add_subplot(616)
         ax_rtt.plot(t, round_trip_time[i], color=clr_str, label=i, lw=0.2)
-        ax_rtt.set_xlabel('time')
+        ax_rtt.set_xlabel('time (s)')
         ax_rtt.set_ylabel('round trip time')
 
         plt.legend(loc='lower right', prop={'size': 9})
