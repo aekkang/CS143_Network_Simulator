@@ -67,8 +67,8 @@ if __name__ == "__main__":
 
         for lnk in links:
             lnk.update_metrics(get_global_time())
-        metrics.report_metrics(get_global_time())
+        #metrics.report_metrics(get_global_time())
     
-    metrics.plot_metrics(True, get_global_time())
+    #metrics.plot_metrics(True, get_global_time())
 
     print ("SIMULATION END")

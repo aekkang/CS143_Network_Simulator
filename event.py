@@ -53,6 +53,7 @@ class BufferDoneProcessing(Event):
 
     def process(self):
         self.link.buf_processing = False
+        self.link.size_in_transit = 0
         enqueue(CheckBuffer(self.start_time, self.link))
 
 class ReceivePacket(Event):
@@ -101,11 +102,11 @@ class Reroute(Event):
         print ("\nRouter distvecs:")
         for r_id in router.Router.ids:
             print r_id + str(router.Router.r_map[r_id].bf_distvec)
-
+        '''
         print ("\nRouting tables:")
         for r_id in router.Router.ids:
             print r_id + str(router.Router.r_map[r_id].routing_table)
-        '''
+        
         print ("==================================")
 
 class PacketTimeout(Event):

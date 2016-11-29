@@ -81,10 +81,12 @@ class Flow:
             if self.unacknowledged.get(ack.number) == Flow.INITIAL_SEND:
 
                 # Remake the missing packet.
+                '''
                 print 'resending dropped packet ', ack.number
 
                 print "checking for packet %d in map" % ack.number
                 print self.unacknowledged.get(ack.number)
+                '''
 
                 pkt = packet.DataPkt(self.source, self.destination, \
                     "PACKET %d" % ack.number, ack.number, self)
@@ -100,7 +102,9 @@ class Flow:
                 # Set the curr_pkt to the next packet that was dropped.
                 self.curr_pkt = ack.number + 1
 
+                '''
                 print "current packet ", self.curr_pkt
+                '''
 
         # If we don't have to resend a packet, we can slide our window
         # over to send new packets.
@@ -109,7 +113,9 @@ class Flow:
             # unacknowledged packets map
             self.unacknowledged.pop(ack.number - 1)
 
+            '''
             print "sliding window, curr_pkt is ", self.curr_pkt
+            '''
 
             if (self.curr_pkt < self.num_packets):
                 pkt = packet.DataPkt(self.source, self.destination, \
@@ -125,8 +131,10 @@ class Flow:
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
         if pkt.number in self.unacknowledged:
+            '''
             print 'handling packet timeout for packet ', pkt.number
             print 'time is ', curr_time
+            '''
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
              self.source))
             enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))

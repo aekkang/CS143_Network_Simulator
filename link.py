@@ -21,6 +21,7 @@ class Link:
 
         self.buffer = []
         self.buf_processing = False
+        self.size_in_transit = 0
 
         # In bytes
         self.buffer_load = 0
@@ -65,6 +66,7 @@ class Link:
     def buffer_get(self):
         pkt, time = self.buffer.pop(0)
         self.buffer_load -= pkt.size
+        self.size_in_transit = pkt.size
         return (pkt, time)
 
     def buffer_empty(self):
@@ -85,7 +87,7 @@ class Link:
     def set_linkcost(self):
         self.bf_lcost = self.buffer_load + 1
         if self.buf_processing:
-            self.bf_lcost += packet.DataPkt.PACKET_SIZE
+            self.bf_lcost += self.size_in_transit
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
