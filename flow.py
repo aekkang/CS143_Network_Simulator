@@ -155,7 +155,8 @@ class Flow:
         send_rate = self.sent_packets / time
         rec_rate = self.received_packets / time
 
-        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, time)
+        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, self.window_size,
+            time)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \

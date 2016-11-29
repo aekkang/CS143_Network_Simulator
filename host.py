@@ -24,6 +24,12 @@ class Host:
         # Each host is connected to a single link.
         self.link = link
 
+        # List of flow ids that host is a source of.
+        self.is_source = []
+
+        # List of flow ids that host is a destination of.
+        self.is_dest = []
+
         # Hash table recording what packet we're expecting
         # from which flow.
         self.expected_pkt = {}
@@ -55,6 +61,10 @@ class Host:
 
     def __str__(self):
         return "<Host ID: " + str(self.id) + ", Address: " + str(self.address) +  \
-            ", Link: " + str(self.link) + ">"
+            ", Link: " + str(self.link) + ">" 
+            # ", Expected Packet: " + str(self.expected_pkt) + \
+            # + ">"
+             # + ", is source: " + str(self.is_source) + ", is dest: " + \
+             # str(self.is_dest) + ">"
 
     __repr__ = __str__

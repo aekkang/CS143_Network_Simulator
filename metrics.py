@@ -11,6 +11,7 @@ flow_rate = {}
 send_rate = {}
 receive_rate = {}
 round_trip_time = {}
+window_sizes = {}
 
 link_ids = []
 flow_ids = []
@@ -19,6 +20,7 @@ l_times = {}
 f_times = {}
 
 colors = ['r', 'g', 'b', 'y', 'k', 'c']
+avg_color = 'plum'
 
 fig = plt.figure(figsize=(10, 10))
 
@@ -40,12 +42,13 @@ def update_link(link_id, bufload, pktloss, flowrate, time):
     dict_insert(link_id, flow_rate, flowrate)
     dict_insert(link_id, l_times, time)
 
-def update_flow(flow_id, send_r, rec_r, rtts, time):
+def update_flow(flow_id, send_r, rec_r, rtts, w_size, time):
     global send_rate, receive_rate, round_trip_time
 
     dict_insert(flow_id, send_rate, send_r)
     dict_insert(flow_id, receive_rate, rec_r)
     dict_insert(flow_id, round_trip_time, rtts)
+    dict_insert(flow_id, window_sizes, w_size)
     dict_insert(flow_id, f_times, time)
 
 def report_metrics(time):
@@ -66,7 +69,7 @@ def report_metrics(time):
 
 def plot_metrics(final, time):
     global buffer_load, packet_loss, flow_rate, fig, l_times, f_times, \
-        send_rate, receive_rate, round_trip_time
+        send_rate, receive_rate, round_trip_time, window_sizes
 
     for i in link_ids:
 
@@ -75,7 +78,6 @@ def plot_metrics(final, time):
 
         ax_bl = fig.add_subplot(611)
         ax_bl.set_ylim((-1, 20))
-        # Plot this over t for average
         ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.02)
         ax_bl.set_xlabel('time')
         ax_bl.set_ylabel('buffer load')
@@ -106,11 +108,27 @@ def plot_metrics(final, time):
         ax_sr.set_xlabel('time')
         ax_sr.set_ylabel('send/receieve rate')
 
-        ax_rtt = fig.add_subplot(615)
+        ax_ws = fig.add_subplot(615)
+        ax_ws.plot(t, window_sizes[i], color=clr_str, label=i, lw=0.2)
+        ax_ws.set_xlabel('time')
+        ax_ws.set_ylabel('window size')
+
+        # avg_ws = []
+        # sum_ = 0
+        # for j in xrange(len(window_sizes[i])):
+        #     avg_ws.append((sum_ + window_sizes[i][j]) / t[j])
+
+        # ax_ws.plot(t, avg_ws, color=avg_color, label=i)
+
+        ax_rtt = fig.add_subplot(616)
         ax_rtt.plot(t, round_trip_time[i], color=clr_str, label=i, lw=0.2)
         ax_rtt.set_xlabel('time')
         ax_rtt.set_ylabel('round trip time')
+
         plt.legend(loc='lower right', prop={'size': 9})
+
+    # TODO? Per host metrics. But in our test cases, none of the flows share
+    # a common host for a source or destination
 
 
     if final is False:
