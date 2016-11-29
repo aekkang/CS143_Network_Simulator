@@ -50,6 +50,14 @@ if __name__ == "__main__":
         routers[3].routing_table = {'H1': 'L3', 'H2': 'L5',\
         'R1':'L3', 'R2':'L3', 'R3':'L4'}
 
+    if TEST_CASE == '2':
+        router.Router.r_map['R1'].routing_table = {'R2': 'L1'}
+        router.Router.r_map['R2'].routing_table = {'R1': 'L1',\
+        'R3': 'L2'}
+        router.Router.r_map['R3'].routing_table = {'R2': 'L2',\
+        'R4': 'L3'}
+        router.Router.r_map['R4'].routing_table = {'R3': 'L3'}
+
     router.set_rneighbours()
     link.Link.ids.sort()
 
