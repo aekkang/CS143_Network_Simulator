@@ -74,7 +74,7 @@ class Link:
         bufload = float(self.buffer_load) / self.buffer_size * 100
         pktloss = self.lost_packets
 
-        flowrate = self.aggr_flow_rate / time
+        flowrate = self.aggr_flow_rate / (time + 1)
 
         metrics.update_link(self.id, bufload, pktloss, flowrate, time)
 

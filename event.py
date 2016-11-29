@@ -83,7 +83,7 @@ class Reroute(Event):
     def __init__(self, start_time, round_no):
         self.start_time = start_time
         self.round_no = round_no
-        self.priority = 4
+        self.priority = 10  #rerouting should happen after any simultaneous events
 
     def process(self):
         print ("rerouting round %d" % self.round_no)
