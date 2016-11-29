@@ -80,7 +80,7 @@ class RtPktTimeout(Event):
 
 
 class Reroute(Event):
-    WAIT_INTERVAL = 10
+    WAIT_INTERVAL = 5
     def __init__(self, start_time, round_no):
         self.start_time = start_time
         self.round_no = round_no

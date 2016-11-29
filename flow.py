@@ -9,6 +9,7 @@ class Flow:
 
     ### TODO: make this an input argument
     TCP_ALG = 'reno'
+    # TCP_ALG = 'fast'
 
     def __init__(self, flow_id, source, destination, data_amt, start_time):
         self.id = flow_id
@@ -29,7 +30,7 @@ class Flow:
         self.dup_pkt = None
 
         # For TCP Reno
-        self.ssthreshold = 100.0 # Set threshold initially high
+        self.ssthreshold = 500.0 # Set threshold initially high
         self.dup_count = 0
         self.fr_flag = False
 
@@ -137,10 +138,10 @@ class Flow:
                     self.unacknowledged.pop(pktnum)
 
             self.adjust_window(ack, curr_time, self.TCP_ALG)
-            print "new window size is ", self.window_size
+            # print "new window size is ", self.window_size
 
-            if self.curr_pkt == self.num_packets:
-                self.done_sending = True
+        if self.curr_pkt == self.num_packets:
+            self.done_sending = True
 
         # Send as many more packets as the window allows.
         window_space = max(int(self.window_size - len(self.unacknowledged)), 0)
@@ -158,16 +159,18 @@ class Flow:
                 self.curr_pkt += 1
                 self.sent_packets += 1
 
-        if self.curr_pkt % 10 == 0:
+        if self.curr_pkt % 100 == 0:
             print "curr_pkt is ", self.curr_pkt
+            print "flow ", self.id
 
 
     def update_metrics(self, time):
         send_rate = self.sent_packets / (time + 1)
         rec_rate = self.received_packets / (time + 1)
 
-        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, self.window_size,
-            time)
+        if self.done_sending is False:
+            metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, 
+                self.window_size, time)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \
@@ -229,9 +232,13 @@ class Flow:
         # If this is not the first duplicate ACK for a given
         # dup ACK number, then we do fast recovery stuff, i.e.
         # adding 1 to the window size.
-        if tcp_algo == 'fast':
-            self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
+        # TODO:
+        # Replace with get, put two pops in each branch of conditional
+        self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
+
+        if tcp_algo == 'fast':
+            
             # Update our min_RTT
             if self.curr_RTT < self.min_RTT:
                 self.min_RTT = self.curr_RTT
@@ -242,7 +249,7 @@ class Flow:
             self.window_size = self.fast_window()
 
         else:
-            self.unacknowledged.pop(ack.number - 1)
+            # self.unacknowledged.pop(ack.number - 1)
 
             # If received an ACK and in slow start phase
             # (i.e. window size < threshold), then increase
@@ -254,7 +261,7 @@ class Flow:
             # increase the window size by 1 / W per ACK.
             else:
                 self.window_size = self.window_size + (1.0 / self.window_size)
-                print 'window size in congestion avoidance is: ', self.window_size
+                # print 'window size in congestion avoidance is: ', self.window_size
 
     
     def handleTimeout(self, pkt, curr_time):

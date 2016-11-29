@@ -19,7 +19,7 @@ flow_ids = []
 l_times = {}
 f_times = {}
 
-colors = ['r', 'g', 'b', 'y', 'k', 'c']
+colors = ['r', 'g', 'b', 'y', 'k', 'c', 'peru', 'fuchsia', 'teal', 'darkkhaki']
 avg_color = 'plum'
 
 fig = plt.figure(figsize=(10, 10))
@@ -79,28 +79,26 @@ def plot_metrics(final, time):
         t = l_times[i]
         clr_str = colors[get_num(i)]
 
-        ax_bl = fig.add_subplot(611)
-        ax_bl.set_ylim((-1, 100))
-        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
-
-
-        ax_bl.set_xlabel('time')
-        ax_bl.set_ylabel('buffer load')
+        ax_fr = fig.add_subplot(611)
+        ax_fr.set_ylim((-1, 2000))
+        ax_fr.set_xlabel('time')
+        ax_fr.set_ylabel('link rate')
+        ax_fr.plot(t, flow_rate[i], color=clr_str, label=i)
 
         ax_pl = fig.add_subplot(612)
-        ax_pl.set_ylim((-1, 50))
+        ax_pl.set_ylim((-1, 100))
         ax_pl.set_xlabel('time')
         ax_pl.set_ylabel('packet loss')
         ax_pl.plot(t, packet_loss[i], color=clr_str, label=i)
 
         plt.legend(loc='upper right', prop={'size': 9})
 
-        ax_fr = fig.add_subplot(613)
-        ax_fr.set_ylim((-1, 2000))
-        ax_fr.set_xlabel('time')
-        ax_fr.set_ylabel('flow rate')
-        ax_fr.plot(t, flow_rate[i], color=clr_str, label=i)
+        ax_bl = fig.add_subplot(613)
+        ax_bl.set_ylim((-1, 100))
+        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
 
+        ax_bl.set_xlabel('time')
+        ax_bl.set_ylabel('buffer load')
 
     for i in flow_ids:
 
