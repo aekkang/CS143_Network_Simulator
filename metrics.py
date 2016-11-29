@@ -23,6 +23,7 @@ flow_ids = []
 
 l_times = {}
 lr_times = {}
+fr_times = {}
 f_times = {}
 
 colors = ['r', 'g', 'b', 'y', 'k', 'c', 'peru', 'fuchsia', 'teal', 'darkkhaki']
@@ -50,11 +51,14 @@ def update_link(link_id, bufload, pktloss, flowrate, time, update_link_rate):
         dict_insert(link_id, flow_rate, flowrate)
         dict_insert(link_id, lr_times, time)
 
-def update_flow(flow_id, send_r, rec_r, rtts, w_size, time):
+def update_flow(flow_id, send_r, rec_r, rtts, w_size, time, update_flow_rate):
     global send_rate, receive_rate, round_trip_time
 
     dict_insert(flow_id, send_rate, send_r)
-    dict_insert(flow_id, receive_rate, rec_r)
+    if update_flow_rate:
+        dict_insert(flow_id, receive_rate, rec_r)
+        dict_insert(flow_id, fr_times, time)
+    #dict_insert(flow_id, receive_rate, rec_r)
     dict_insert(flow_id, round_trip_time, rtts)
     dict_insert(flow_id, window_sizes, w_size)
     dict_insert(flow_id, f_times, time)
@@ -113,10 +117,11 @@ def plot_metrics(final, time):
         clr_str = colors[get_num(i)]
 
         ax_sr = fig.add_subplot(614)
-        ax_sr.plot(t, send_rate[i], color=clr_str, label=i)
-        ax_sr.plot(t, receive_rate[i], color='green', label=i)
+        #ax_sr.plot(t, send_rate[i], color=clr_str, label=i)
+        #ax_sr.plot(t, receive_rate[i], color='green', label=i)
         ax_sr.set_xlabel('time (s)')
-        ax_sr.set_ylabel('send/receieve rate')
+        ax_sr.set_ylabel('flow rate\n(Mbps)')
+        ax_sr.plot(fr_times[i], receive_rate[i], color=clr_str, label=i)
 
         ax_ws = fig.add_subplot(615)
         ax_ws.plot(t, window_sizes[i], color=clr_str, label=i, lw=0.2)

@@ -46,6 +46,8 @@ class Flow:
         # Metric lists
         self.sent_packets = 0
         self.received_packets = 0
+        self.prev_recv_packets = 0
+        self.prev_time = 0
 
 
     def __str__(self):
@@ -168,9 +170,22 @@ class Flow:
         send_rate = self.sent_packets / (time + 1)
         rec_rate = self.received_packets / (time + 1)
 
+        if (time - self.prev_time) >= 0.1:
+            recv_packets = self.received_packets - self.prev_recv_packets
+            recv_rate = (recv_packets * 1024 * 8.0)\
+                        / ((1024 ** 2) * (time - self.prev_time))
+            self.prev_time = time
+            self.prev_recv_packets = self.received_packets
+            update_flow_rate = True
+            
+        else:
+            recv_rate = 0
+            update_flow_rate = False
+
+
         if self.done_sending is False:
-            metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, 
-                self.window_size, time)
+            metrics.update_flow(self.id, send_rate, recv_rate, self.curr_RTT, 
+                self.window_size, time, update_flow_rate)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \

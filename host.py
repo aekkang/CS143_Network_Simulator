@@ -61,6 +61,8 @@ class Host:
                 ack = packet.makeAck(pkt.flow, self.expected_pkt[pkt.flow.id])
                 enqueue(event.SendPacket(time, ack, self.link, self))
 
+                pkt.flow.received_packets += 1
+
             # If the incoming packet has a number LESS THAN the one
             # we're expecting, it's a duplicate and we don't care
             # about it. Don't send an ACK.
