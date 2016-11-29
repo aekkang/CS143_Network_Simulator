@@ -10,6 +10,12 @@ import router
 
 from parser import parse
 
+def flows_done(flows):
+    for f in flows:
+        if f.done_sending is False:
+            return False
+    return True
+
 if __name__ == "__main__":
     
     # Verify that a test case number was given
@@ -60,7 +66,7 @@ if __name__ == "__main__":
     # END TEST CASE -1 ===================================
     '''
 
-    while (qempty() == False):
+    while (qempty() == False and flows_done(flows) is False):
         event = dequeue()
         set_global_time(event.start_time)
         event.process()

@@ -53,12 +53,15 @@ def plot_metrics(final, time):
 
     for i in link_ids:
 
+        if get_link_num(i) not in [1, 2]:
+            continue
+
         t = times[i]
         clr_str = colors[get_link_num(i)]
 
         ax_bl = fig.add_subplot(311)
-        ax_bl.set_ylim((-1, 20))
-        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.02)
+        ax_bl.set_ylim((-1, 100))
+        ax_bl.plot(t, buffer_load[i], color=clr_str, label=i, lw=0.4)
         ax_bl.set_xlabel('time')
         ax_bl.set_ylabel('buffer load')
 
@@ -82,6 +85,8 @@ def plot_metrics(final, time):
         plt.gcf().clear()
 
     else:
+        print "Showing plot"
         plt.draw()
         plt.show()
+
 
