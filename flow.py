@@ -2,6 +2,7 @@ from math import ceil
 from pqueue import event_queue, enqueue, get_global_time, qempty
 import packet
 import event
+import metrics
 
 class Flow:
 
@@ -31,6 +32,10 @@ class Flow:
         self.GAMMA = 0.5
         self.ALPHA = 15
 
+        # Metric lists
+        self.sent_packets = 0
+        self.received_packets = 0
+
 
     def __str__(self):
         return "<Flow ID: " + str(self.id) + ", Source: " + str(self.source) +  \
@@ -56,6 +61,7 @@ class Flow:
             # for yet.
             self.unacknowledged[self.curr_pkt] = self.start_time
             self.curr_pkt += 1
+            self.sent_packets += 1
 
         '''
         for i in range(num_packets):
@@ -117,11 +123,13 @@ class Flow:
         # If we've successfully received an ACK for an UNACK'd packet,
         # we remove the packet from the map and update our RTT estimate.
         else:   
+            self.received_packets += 1
             # We can remove the correctly acknowledged packet from our
             # unacknowledged packets map
             for pktnum in self.unacknowledged:
                 if pktnum < ack.number - 1:
                     self.unacknowledged.pop(pktnum)
+                    
 
             self.adjust_window(ack, curr_time, False, self.TCP_ALG)
             print "new window size is ", self.window_size
@@ -139,8 +147,15 @@ class Flow:
 
                 self.unacknowledged[self.curr_pkt] = curr_time
                 self.curr_pkt += 1
+                self.sent_packets += 1
 
         print "curr_pkt is ", self.curr_pkt
+
+    def update_metrics(self, time):
+        send_rate = self.sent_packets / time
+        rec_rate = self.received_packets / time
+
+        metrics.update_flow(self.id, send_rate, rec_rate, self.curr_RTT, time)
 
     def fast_window(self):
         return min(2 * self.window_size, (1 - self.GAMMA) * \
