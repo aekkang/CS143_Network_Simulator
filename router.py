@@ -53,42 +53,53 @@ class Router:
                 rt_ack = packet.RtAck(pkt)
                 enqueue(event.SendPacket(time, rt_ack, ack_link, self))
                 if pkt.bf_round == self.bf_round:
-                    self.update_bf(pkt.sender.id, pkt.distvec, ack_link.bf_lcost, time)
+                    self.update_bf(pkt.sender.id, pkt.distvec, ack_link, time)
         else:
             next_link = link.Link.l_map[self.routing_table[pkt.recipient.id]]
             enqueue(event.SendPacket(time, pkt, next_link, self))    
                 
 
-    def update_bf(self, src_id, dvec, l_cost, time):
+    def update_bf(self, src_id, dvec, src_ln, time):
         '''
         src_id: the ID of the router this dvec is coming from
         dvec: the distance vector sent by router src_id
-        l_cost: cost of link between self and src_id
+        src_ln: link between self and src_id
         time: the current system time
         '''
         for rtr in dvec:                       # go through each router
-            dist, pred = dvec[rtr]             # distance and predecessor from src_id
-            cur_dist, cur_pred = self.bf_distvec.get(rtr, (INF, None))
-            if dist + l_cost < cur_dist: 
-                self.bf_distvec[dest] = (cur_dist + l_cost, src_id)
+            dist, pred, ln = dvec[rtr]             # distance and predecessor from src_id
+            cur_dist, cur_pred, cur_ln = self.bf_distvec.get(rtr, (INF, None, None))
+            if dist + src_ln.bf_lcost < cur_dist: 
+                self.bf_distvec[rtr] = (dist + src_ln.bf_lcost, src_id, src_ln.id)
                 self.bf_changed = True
         self.bf_updated[src_id] = True
+
+        if self.id == 'R1' and False:
+            print ("****************")
+            print ("Received dvec from %s: " % src_id + str(dvec))
+            print ("Own dvec: " + str(self.bf_distvec))
 
         # If we have received routing packets from all neighbours,
         # then this cycle of updates is complete
         if len(self.bf_updated) == len(self.rneighbours):
             if self.bf_changed == False:
+                #print ("%s updating RT. Distvec:" % self.id + str(self.bf_distvec))
+                
                 # If the distance vector didn't change the BF is done
                 # and we should/can update the routing table
                 self.update_routing_table()
-                # Reset list of what we've received routing packets from
-
+                
+                #print ("%s RT: "%self.id + str(self.routing_table))
+            
+            # Send new distvec to neighbours
             self.broadcast_distvec(time)
 
+            # Reset list of what we've received routing packets from
             self.bf_updated = {}
             self.bf_changed = False
 
     def broadcast_distvec(self, time):
+        #print ("%s broadcasting " % self.id + str(self.bf_distvec))
         for rtr_id in self.rneighbours:
             link = self.rneighbours[rtr_id]
             dest = link.get_receiver(self)
@@ -103,9 +114,7 @@ class Router:
         # Go through distvec and set the routing table destination
         # according to the Bellman-Ford results
         for dst in self.bf_distvec:
-            self.routing_table[dst] = self.bf_distvec[dst][1]
-
-        print ("%s: updated routing table" % self.id)
+            self.routing_table[dst] = self.bf_distvec[dst][2]
 
     def handle_timeout(self, curr_time, rtpkt):
         '''
@@ -126,10 +135,12 @@ class Router:
         # from a previous send. Do nothing.
 
     def reset_distvec(self):
-        self.distvec = {}
-        for rtr_id in self.rneighbours:
-            self.distvec[rtr_id] = self.rneighbours[rtr_id].bf_lcost
-
+        self.bf_distvec = {}
+        for lnk in self.links:
+            recv_id = lnk.get_receiver(self).id
+            self.bf_distvec[recv_id] = (lnk.bf_lcost, recv_id, lnk.id)
+        self.bf_distvec[self.id] = (0, self.id, None)
+        #print ("%s distvec reset to " % self.id + str(self.bf_distvec))
 
     def __str__(self):
         return "<Router ID: " + str(self.id) + ", Routing table: " + \
@@ -137,11 +148,13 @@ class Router:
 
     __repr__ = __str__
 
-def reset_distvecs(time, round_no):
+def reset_bf(time, round_no):
     for rtr_id in Router.ids:
         Router.r_map[rtr_id].bf_round = round_no
         Router.r_map[rtr_id].reset_distvec()
         Router.r_map[rtr_id].broadcast_distvec(time)
+        Router.r_map[rtr_id].bf_updated = {}
+        Router.r_map[rtr_id].bf_changed = False
 
 def set_rneighbours():
     for rtr_id in Router.ids:

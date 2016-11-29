@@ -89,7 +89,7 @@ class Reroute(Event):
     def process(self):
         print ("rerouting round %d" % self.round_no)
         link.set_linkcosts()
-        router.reset_distvecs(self.start_time, self.round_no)
+        router.reset_bf(self.start_time, self.round_no)
         enqueue(Reroute(self.start_time + Reroute.WAIT_INTERVAL, self.round_no + 1))
 
         #debugging output
@@ -98,9 +98,13 @@ class Reroute(Event):
         for l_id in link.Link.ids:
             coststr += "%s: %d " % (l_id, link.Link.l_map[l_id].bf_lcost)
         print (coststr)
-
+        '''
         print ("\nRouter distvecs:")
         for r_id in router.Router.ids:
-            print r_id + str(router.Router.r_map[r_id].distvec)
-        
+            print r_id + str(router.Router.r_map[r_id].bf_distvec)
+
+        print ("\nRouting tables:")
+        for r_id in router.Router.ids:
+            print r_id + str(router.Router.r_map[r_id].routing_table)
+        '''
         print ("==================================")

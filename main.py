@@ -36,8 +36,8 @@ if __name__ == "__main__":
         routers[1].routing_table = {'H1': 'L1', 'H2': 'L3',\
         'R1':'L1', 'R4':'L3', 'R3':'L1'}
         routers[2].routing_table = {'H1': 'L2', 'H2': 'L4',\
-        'R1':'L2', 'R4':'L4', 'R3':'L2'}
-        routers[3].routing_table = {'H1': 'L4', 'H2': 'L5',\
+        'R1':'L2', 'R4':'L4', 'R2':'L2'}
+        routers[3].routing_table = {'H1': 'L3', 'H2': 'L5',\
         'R1':'L3', 'R2':'L3', 'R3':'L4'}
 
     router.set_rneighbours()
