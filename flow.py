@@ -7,8 +7,7 @@ class Flow:
 
     f_map = {}
 
-    INITIAL_SEND = 0
-    DUP_SEND = 1
+    TCP_ALG = 'fast'
 
     def __init__(self, flow_id, source, destination, data_amt, start_time):
         self.id = flow_id
@@ -110,7 +109,9 @@ class Flow:
                 self.unacknowledged[ack.number - 1] = curr_time
 
                 # Halve our window size.
-                self.window_size = self.window_size / 2
+                self.adjust_window(ack, curr_time, True, self.TCP_ALG)
+                print "new window size is ", self.window_size
+
                 print "current packet ", self.curr_pkt
 
         # If we've successfully received an ACK for an UNACK'd packet,
@@ -122,20 +123,10 @@ class Flow:
                 if pktnum < ack.number - 1:
                     self.unacknowledged.pop(pktnum)
 
-            self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
-
-            # Update our min_RTT
-            if self.curr_RTT < self.min_RTT:
-                self.min_RTT = self.curr_RTT
-
-            # TCP FAST: Calculate our new window size
-            self.window_size = min(2 * self.window_size, (1 - self.GAMMA) * \
-                self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
-                self.window_size + self.ALPHA))
-
+            self.adjust_window(ack, curr_time, False, self.TCP_ALG)
             print "new window size is ", self.window_size
 
-        window_space = int(self.window_size - len(self.unacknowledged))
+        window_space = max(int(self.window_size - len(self.unacknowledged)), 0)
 
         for i in xrange(window_space):
             if (self.curr_pkt < self.num_packets):
@@ -148,8 +139,33 @@ class Flow:
 
                 self.unacknowledged[self.curr_pkt] = curr_time
                 self.curr_pkt += 1
-                
+
         print "curr_pkt is ", self.curr_pkt
+
+    def fast_window(self):
+        return min(2 * self.window_size, (1 - self.GAMMA) * \
+                self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
+                self.window_size + self.ALPHA))
+
+    def adjust_window(self, ack, curr_time, dup_ack, tcp_algo='fast'):
+        if dup_ack is True:
+            # Duplicate ack, halve window size
+            self.window_size /= 2
+
+        elif dup_ack is False and tcp_algo == 'fast':
+            self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
+
+            # Update our min_RTT
+            if self.curr_RTT < self.min_RTT:
+                self.min_RTT = self.curr_RTT
+
+            # TCP FAST: Calculate our new window size
+            self.window_size = self.fast_window()
+
+        elif dup_ack is False and tcp_algo == 'reno':
+            # TODO: TCP RENO
+            pass
+
     
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
