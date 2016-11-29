@@ -64,21 +64,11 @@ if __name__ == "__main__":
         event = dequeue()
         set_global_time(event.start_time)
         event.process()
-        for ln in links:
-            ln.update_metrics()
+
+        for lnk in links:
+            lnk.update_metrics(get_global_time())
         #metrics.report_metrics(get_global_time())
+    
+    #metrics.plot_metrics(True, get_global_time())
+
     print ("SIMULATION END")
-'''
-trash
-
-tp = packet.Packet(1,2)
-tlink = link.Link(256, 10, [tp], [1,2])
-cbev = event.CheckBuffer(0, tlink)
-bdpev = event.BufferDoneProcessing(2, tlink)
-
-
-enqueue(bdpev)
-enqueue(cbev)
-ev = dequeue()
-
-'''

@@ -24,15 +24,33 @@ class Host:
         # Each host is connected to a single link.
         self.link = link
 
+        # Hash table recording what packet we're expecting
+        # from which flow.
+        self.expected_pkt = {}
+
     def receive(self, pkt, time):
         #print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
             pkt.flow.receiveAck(pkt, time)
         
         else:
-            #ack = packet.Ack(self, pkt.sender, pkt.number)
-            ack = packet.makeAck(pkt)
-            enqueue(event.SendPacket(time, ack, self.link, self))
+            # Only send ACKs for packets we have not yet recieved 
+            # (next_pkt = pkt.number) or packets out of order
+            # (next_pkt < pkt.number).
+            # If first packet from flow, then set expected_pkt to 0.
+            if self.expected_pkt.setdefault(pkt.flow.id, 0) <= pkt.number:
+
+                # If the packet is the one we're expecting,
+                # increment its value in next_packet.
+                if self.expected_pkt[pkt.flow.id] == pkt.number:
+                    self.expected_pkt[pkt.flow.id] += 1
+
+                ack = packet.makeAck(pkt.flow, self.expected_pkt[pkt.flow.id])
+                enqueue(event.SendPacket(time, ack, self.link, self))
+
+            # If the incoming packet has a number LESS THAN the one
+            # we're expecting, it's a duplicate and we don't care
+            # about it. Don't send an ACK.
             
 
     def __str__(self):

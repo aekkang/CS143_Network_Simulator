@@ -21,6 +21,7 @@ class Link:
 
         self.buffer = []
         self.buf_processing = False
+        self.size_in_transit = 0
 
         # In bytes
         self.buffer_load = 0
@@ -65,17 +66,19 @@ class Link:
     def buffer_get(self):
         pkt, time = self.buffer.pop(0)
         self.buffer_load -= pkt.size
+        self.size_in_transit = pkt.size
         return (pkt, time)
 
     def buffer_empty(self):
         return len(self.buffer) == 0
 
-    def update_metrics(self):
+    def update_metrics(self, time):
         bufload = float(self.buffer_load) / self.buffer_size * 100
         pktloss = self.lost_packets
-        flowrate = self.aggr_flow_rate / (get_global_time() + 1)
 
-        metrics.update_link(self.id, bufload, pktloss, flowrate)
+        flowrate = self.aggr_flow_rate / (time + 1)
+
+        metrics.update_link(self.id, bufload, pktloss, flowrate, time)
 
         # To look into
         self.buf_occupancy.append(self.buffer_load)
@@ -84,7 +87,7 @@ class Link:
     def set_linkcost(self):
         self.bf_lcost = self.buffer_load + 1
         if self.buf_processing:
-            self.bf_lcost += packet.DataPkt.PACKET_SIZE
+            self.bf_lcost += self.size_in_transit
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
