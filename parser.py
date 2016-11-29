@@ -233,6 +233,9 @@ def parse_flows(f, h_map):
         f_map[flow_id] = flow
         flows.append(flow)
 
+        src_host.is_source.append(flow_id)
+        dest_host.is_dest.append(flow_id)
+
         # print
 
     flow_class.Flow.f_map = f_map

@@ -10,6 +10,12 @@ import router
 
 from parser import parse
 
+def flows_done(flows):
+    for f in flows:
+        if f.done_sending is False:
+            return False
+    return True
+
 if __name__ == "__main__":
     
     # Verify that a test case number was given
@@ -26,8 +32,12 @@ if __name__ == "__main__":
 
     # Lists of each object returned from the parser
     hosts, links, routers, flows = parse(INFILE)
+    
+    # Hopefully can be improved
     metrics.link_ids = link.Link.l_map.keys()
     metrics.link_ids.sort()
+
+    metrics.flow_ids = flow.Flow.f_map.keys()
 
     # Hard-code routing tables for test-case 1
     if TEST_CASE == '1' or TEST_CASE == '3':
@@ -60,14 +70,19 @@ if __name__ == "__main__":
     # END TEST CASE -1 ===================================
     '''
 
-    while (qempty() == False):
+    while (qempty() == False and flows_done(flows) is False):
         event = dequeue()
         set_global_time(event.start_time)
         event.process()
 
+
         for lnk in links:
             lnk.update_metrics(get_global_time())
-        #metrics.report_metrics(get_global_time())
+
+        for flow in flows:
+            flow.update_metrics(get_global_time())
+
+        metrics.report_metrics(get_global_time())
     
     #metrics.plot_metrics(True, get_global_time())
 
