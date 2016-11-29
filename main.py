@@ -6,6 +6,7 @@ import host
 import packet
 import flow
 import metrics
+import router
 
 from parser import parse
 
@@ -29,12 +30,20 @@ if __name__ == "__main__":
     metrics.link_ids.sort()
 
     # Hard-code routing tables for test-case 1
-    if TEST_CASE == '1':
-        routers[0].routing_table = {'H1': 'L0', 'H2': 'L1'}
-        routers[1].routing_table = {'H1': 'L1', 'H2': 'L3'}
-        routers[2].routing_table = {'H1': 'L2', 'H2': 'L4'}
-        routers[3].routing_table = {'H1': 'L4', 'H2': 'L5'}
+    if TEST_CASE == '1' or TEST_CASE == '3':
+        routers[0].routing_table = {'H1': 'L0', 'H2': 'L1',\
+        'R2':'L1', 'R3':'L2', 'R4':'L1'}
+        routers[1].routing_table = {'H1': 'L1', 'H2': 'L3',\
+        'R1':'L1', 'R4':'L3', 'R3':'L1'}
+        routers[2].routing_table = {'H1': 'L2', 'H2': 'L4',\
+        'R1':'L2', 'R4':'L4', 'R3':'L2'}
+        routers[3].routing_table = {'H1': 'L4', 'H2': 'L5',\
+        'R1':'L3', 'R2':'L3', 'R3':'L4'}
 
+    router.set_rneighbours()
+    link.Link.ids.sort()
+
+    enqueue(event.Reroute(0, 1))
     for flow in flows:
         flow.startFlow()
 
@@ -55,9 +64,9 @@ if __name__ == "__main__":
         event = dequeue()
         set_global_time(event.start_time)
         event.process()
-        for link in links:
-            link.update_metrics()
-        metrics.report_metrics(get_global_time())
+        for ln in links:
+            ln.update_metrics()
+        #metrics.report_metrics(get_global_time())
     print ("SIMULATION END")
 '''
 trash

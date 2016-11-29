@@ -25,7 +25,7 @@ class Host:
         self.link = link
 
     def receive(self, pkt, time):
-        print (pkt.payload, time)
+        #print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
             pkt.flow.receiveAck(pkt, time)
         

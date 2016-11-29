@@ -25,6 +25,9 @@ class Link:
         # In bytes
         self.buffer_load = 0
 
+        # Bellman-Ford link cost
+        self.bf_lcost = 1
+
         # Ends is a list that contains the object on either side of the list.
         # Its size at any time should be at most two.
         self.ends = []
@@ -70,13 +73,18 @@ class Link:
     def update_metrics(self):
         bufload = float(self.buffer_load) / self.buffer_size * 100
         pktloss = self.lost_packets
-        flowrate = self.aggr_flow_rate / get_global_time()
+        flowrate = self.aggr_flow_rate / (get_global_time() + 1)
 
         metrics.update_link(self.id, bufload, pktloss, flowrate)
 
         # To look into
         self.buf_occupancy.append(self.buffer_load)
         self.packet_loss.append(self.lost_packets)
+
+    def set_linkcost(self):
+        self.bf_lcost = self.buffer_load + 1
+        if self.buf_processing:
+            self.bf_lcost += packet.DataPkt.PACKET_SIZE
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
@@ -87,3 +95,6 @@ class Link:
     __repr__ = __str__
 
 
+def set_linkcosts():
+    for link_id in Link.ids:
+        Link.l_map[link_id].set_linkcost()

@@ -1,4 +1,6 @@
 from pqueue import event_queue, enqueue
+import router
+import link
 
 class Event:
     ''' Generic Event class, default priority 3'''
@@ -66,3 +68,39 @@ class ReceivePacket(Event):
         self.receiver.receive(self.packet, self.start_time)
 
 
+class RtPktTimeout(Event):
+    def __init__(self, start_time, router, rtpkt):
+        self.start_time = start_time
+        self.router = router
+        self.rtpkt = rtpkt
+        self.priority = 2
+
+    def process(self):
+        self.rtpkt.sender.handle_timeout(self.start_time, self.rtpkt)
+
+
+class Reroute(Event):
+    WAIT_INTERVAL = 1
+    def __init__(self, start_time, round_no):
+        self.start_time = start_time
+        self.round_no = round_no
+        self.priority = 4
+
+    def process(self):
+        print ("rerouting round %d" % self.round_no)
+        link.set_linkcosts()
+        router.reset_distvecs(self.start_time, self.round_no)
+        enqueue(Reroute(self.start_time + Reroute.WAIT_INTERVAL, self.round_no + 1))
+
+        #debugging output
+        print ("Link costs:")
+        coststr = ""
+        for l_id in link.Link.ids:
+            coststr += "%s: %d " % (l_id, link.Link.l_map[l_id].bf_lcost)
+        print (coststr)
+
+        print ("\nRouter distvecs:")
+        for r_id in router.Router.ids:
+            print r_id + str(router.Router.r_map[r_id].distvec)
+        
+        print ("==================================")
