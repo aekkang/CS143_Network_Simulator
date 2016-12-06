@@ -37,9 +37,12 @@ class Flow:
 
         # For TCP FAST
         self.min_RTT = 100.0
-        self.curr_RTT = 0.0
+        self.curr_RTT = None
+        self.prev_RTT = None
+        self.RTTALPHA = 0.125
         self.GAMMA = 0.5
         self.ALPHA = 15
+        self.update_period = 0.02
 
         self.last_dup_time = 0
 
@@ -69,6 +72,8 @@ class Flow:
                 self.source.link, self.source))
             
             enqueue(event.PacketTimeout(self.start_time + self.timeout, pkt))
+            if self.TCP_ALG == 'fast':
+                enqueue(event.UpdateWindow(self.start_time + self.update_period, self))
 
             # We keep track of which packets we haven't received ACKS
             # for yet.
@@ -187,9 +192,12 @@ class Flow:
                 self.window_size, time, update_flow_rate)
 
     def fast_window(self):
-        return min(2 * self.window_size, (1 - self.GAMMA) * \
-                self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
-                self.window_size + self.ALPHA))
+        if self.curr_RTT != None:
+            return min(2 * self.window_size, (1 - self.GAMMA) * \
+                    self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
+                    self.window_size + self.ALPHA))
+        else:
+            return 2 * self.window_size
 
     def halve_window(self, ack, curr_time, tcp_algo='fast'):
         # Halve our window size.
@@ -214,12 +222,14 @@ class Flow:
         enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
 
         # Set the curr_pkt to the next packet that was dropped.
-        self.curr_pkt = ack.number + 1
+        # self.curr_pkt = ack.number + 1
 
         # Edit the start time logged in the unack map.
         self.unacknowledged[ack.number - 1] = curr_time
         print "\tnew window size is", self.window_size
         # print "current packet", self.curr_pkt
+
+        self.fr_flag = True
 
 
     def fast_recovery(self, curr_time, tcp_algo='fast'):
@@ -249,6 +259,7 @@ class Flow:
 
         # TODO:
         # Replace with get, put two pops in each branch of conditional
+        self.prev_RTT = self.curr_RTT
         self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
         if tcp_algo == 'fast':
@@ -259,8 +270,13 @@ class Flow:
             if self.min_RTT < 0.0005:
                 self.min_RTT = self.curr_RTT
 
+            if self.prev_RTT != None:
+                self.curr_RTT = self.RTTALPHA * self.curr_RTT + \
+                (1 - self.RTTALPHA) * self.prev_RTT
+
+
             # TCP FAST: Calculate our new window size
-            self.window_size = self.fast_window()
+            # self.window_size = self.fast_window()
 
         else:
             # self.unacknowledged.pop(ack.number - 1)
