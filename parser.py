@@ -39,21 +39,10 @@ flow_start_time
 
 '''
 
-# Constructs object in order
-
-# Links, Routers/Hosts, Packets (importance is links first, really)
-# and maps each object's id to the object in a map for each type of object
-# by using a class-level global variable
-# See here: 
-# https://www.toptal.com/python/python-class-attributes-an-overly-thorough-guide
-
 import link as link_class
 import host as host_class
 import router as router_class
 import flow as flow_class
-
-TEST_CASE = '1'
-INFILE = './input/test_case_' + TEST_CASE
 
 
 def next_line(f, cast='s'):
@@ -69,34 +58,22 @@ def next_line(f, cast='s'):
     return f.readline().strip()
 
 def parse_hosts(f, l_map):
-    '''
-    Parses the input relevant to hosts from the test case input. Since the links
-    have already been initialized at this point, the map of link_id to link 
-    object is passed in as well. We use the map to set the link that each host
-    is connected to, as well as set the entities on each "end" of a link.
-    '''
     hosts = []
     h_map = {}
 
     num_hosts = next_line(f, 'i')
-    # print num_hosts
-
-    # print "HOSTS\n"
 
     for i in xrange(num_hosts):
         addr = next_line(f)
-        # print addr
 
         link_id = next_line(f)
-        # print link_id
 
         # Get the link object with that ID from the map
         host_link = l_map[link_id]
-        # print host_link
 
         host_id = next_line(f)
-        # print host_id
 
+        # Construct host object, add it to host map and list
         h = host_class.Host(host_id, host_link)
         h_map[host_id] = h
         hosts.append(h)
@@ -104,50 +81,36 @@ def parse_hosts(f, l_map):
         # Add the host as an 'end' to the link
         host_link.add_end(h)
 
-        # print
-
+    # Set the map for the host class
     host_class.Host.h_map = h_map
 
     return (hosts, h_map)
 
 def parse_routers(f, l_map):
-    '''
-    Parses the input relevant to hosts from the test case input. Since the links
-    have already been initialized at this point, the map of link_id to link 
-    object is passed in as well. We use the map to set the link that each host
-    is connected to, as well as set the entities on each "end" of a link.
-    '''
-
     routers = []
     r_map = {}
     r_links = []
 
     num_routers = int(next_line(f))
-    # print num_routers
-
-    # if num_routers > 0:
-    #     print "ROUTERS\n"
 
     for i in xrange(num_routers):
         addr = next_line(f)
-        # print addr
 
         num_links = int(next_line(f))
-        # print "Num links: %d" % num_links
 
         for j in xrange(num_links):
             link_id = next_line(f)
-            # print link_id
+            
             r_links.append(link_id)
 
-
         router_id = next_line(f)
-        # print router_id
 
+        # Construct router and update router map and list
         r = router_class.Router(router_id, r_links)
         r_map[router_id] = r
         routers.append(r)
 
+        # Update the ends of the links connected to each router
         for l_id in r_links:
             mapped_link = l_map[l_id]
             mapped_link.add_end(r)
@@ -155,8 +118,7 @@ def parse_routers(f, l_map):
         # Reset r_links after each iteration
         r_links = []
 
-        # print
-
+    # Set the map for the router class
     router_class.Router.r_map = r_map
 
     return (routers, r_map)
@@ -166,32 +128,30 @@ def parse_links(f):
     l_map = {}
 
     num_links = int(next_line(f))
-    # print num_links
-
-    # print "LINKS\n"
 
     for i in xrange(num_links):
         link_id = next_line(f)
-        # print link_id
 
-        # Passing link_rate into constructor as bytes per second
+        # Input link rate is in MB/s. Convert to
+        # pass link_rate into constructor in bytes per second
         link_rate = (next_line(f, 'f')) * 1e6 / 8
         # print link_rate
 
-        # Passing link delay into constructor as seconds
+        # Input link delay is in milliseconds. Convert to
+        # seconds when passing to constructor
         link_delay = next_line(f, 'f') * 0.001
-        # print link_delay
 
-        # Passing buffer size into constructor as number of bytes
+        # Input buffer size is in MB.
+        # Passing buffer size into constructor in bytes
         link_buffer_size = next_line(f, 'f') * 1e3
         # print link_buffer_size
 
+        # Construct link and add to link map and list of links
         l = link_class.Link(link_id, link_rate, link_delay, link_buffer_size)
         l_map[link_id] = l
         links.append(l)
 
-        # print
-
+    # Set the map for the link class
     link_class.Link.l_map = l_map
 
     return (links, l_map)
@@ -201,43 +161,36 @@ def parse_flows(f, h_map):
     f_map = {}
 
     num_flows = int(next_line(f))
-    # print num_flows
-
-    # print "FLOWS\n"
 
     for i in xrange(num_flows):
         flow_id  = next_line(f)
-        # print flow_id, type(flow_id)
 
-        # This is an id
+        # ID for the source of the flow
         flow_src = next_line(f)
-        # print flow_src
 
+        # Host object of the source
         src_host = h_map[flow_src]
-        # print src_host
 
+        # ID for the destination of the flow
         flow_dest = next_line(f)
-        # print flow_dest
 
+        # Host object of the destination
         dest_host = h_map[flow_dest]
-        # print dest_host
 
+        # Amount of data to be sent by the flow
         data_amount = next_line(f, 'i')
-        # print data_amount
 
+        # Flow start time
         flow_start_time = next_line(f, 'f')
-        # print flow_start_time
 
+        # Construct the flow, insert it into the map and append
+        # it to the list of flows
         flow = flow_class.Flow(flow_id, src_host, dest_host, 
                             data_amount, flow_start_time)
         f_map[flow_id] = flow
         flows.append(flow)
 
-        src_host.is_source.append(flow_id)
-        dest_host.is_dest.append(flow_id)
-
-        # print
-
+    # Set the Flow class map
     flow_class.Flow.f_map = f_map
 
     return (flows, f_map)
@@ -250,38 +203,6 @@ def parse(file_name):
     routers, r_map = parse_routers(f, l_map)
     flows, f_map = parse_flows(f, h_map)
 
-    # hosts[0].maps = h_map
-
     f.close()
 
-    # print links, l_map, len(links)
-    # print
-    # print hosts, h_map, len(hosts)
-    # print
-    # print routers, r_map, len(routers)
-    # print
-    # print flows, f_map, len(flows)
-
     return (hosts, links, routers, flows)
-
-    # for i in xrange(len(hosts)):
-    #     print hosts[i].h_map
-
-    # print
-
-    # for i in xrange(len(links)):
-    #     print links[i].l_map
-
-    # print
-
-    # for i in xrange(len(routers)):
-    #     print routers[i].r_map
-
-    # print
-
-    # for i in xrange(len(flows)):
-    #     print flows[i].f_map
-
-if __name__ == '__main__':
-    parse(INFILE)
-

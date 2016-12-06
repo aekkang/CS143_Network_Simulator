@@ -24,12 +24,6 @@ class Host:
         # Each host is connected to a single link.
         self.link = link
 
-        # List of flow ids that host is a source of.
-        self.is_source = []
-
-        # List of flow ids that host is a destination of.
-        self.is_dest = []
-
         # Hash table recording what packet we're expecting
         # from which flow.
         self.expected_pkt = {}
