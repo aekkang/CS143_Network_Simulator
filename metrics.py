@@ -26,7 +26,8 @@ lr_times = {}
 fr_times = {}
 f_times = {}
 
-colors = ['r', 'g', 'b', 'y', 'k', 'c', 'peru', 'fuchsia', 'teal', 'darkkhaki']
+colors = ['yellowgreen', 'cornflowerblue', 'salmon', 'mediumpurple', \
+    'goldenrod', 'mediumaquamarine', 'darkblue', 'orchid', 'mediumvioletred', 'cadetblue']
 avg_color = 'plum'
 
 fig = plt.figure(figsize=(10, 10))
