@@ -120,3 +120,15 @@ class PacketTimeout(Event):
         self.packet.flow.handleTimeout(self.packet, self.start_time)
 
 
+# Used specifically for TCP FAST.
+class UpdateWindow(Event):
+    def __init__(self, start_time, flow):
+        self.start_time = start_time
+        self.priority = 3
+        self.flow = flow
+
+    def process(self):
+        print 'periodically updating window'
+        self.flow.window_size = self.flow.fast_window()
+        enqueue(UpdateWindow(self.start_time + self.flow.update_period, \
+            self.flow))
