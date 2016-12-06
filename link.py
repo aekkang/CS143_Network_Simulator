@@ -84,16 +84,10 @@ class Link:
         bufload = self.buffer_pkts
         pktloss = self.lost_packets - self.prev_lost_packets
         self.prev_lost_packets = self.lost_packets
-        #pktloss = self.prev_packetloss
 
         if time >= self.prev_time + 0.1:
             link_rate = (self.aggr_flow_rate - self.prev_flow_rate)\
                         / (1024 ** 2 * (time - self.prev_time))
-
-
-            #pktloss = float(self.lost_packets - self.prev_lost_packets) / (time - self.prev_time)
-            #self.prev_lost_packets = self.lost_packets
-            #self.prev_packetloss = pktloss
 
             self.prev_time = time
             self.prev_flow_rate = self.aggr_flow_rate

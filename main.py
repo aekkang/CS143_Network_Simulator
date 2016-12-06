@@ -19,21 +19,21 @@ def flows_done(flows):
 if __name__ == "__main__":
     
     # Verify that a test case number was given
-    if len(sys.argv) != 2:
-        print "usage: python main.py [TEST_CASE_NO]"
+    if len(sys.argv) != 3:
+        print "usage: python main.py [TEST_CASE_NO] [TCP_ALG]"
         sys.exit(-1)
     
-    # Read arguments to figure out what test case
+    # Read arguments to figure out what test case and TCP algorithm to use
     TEST_CASE = sys.argv[1]
+    flow.Flow.TCP_ALG = sys.argv[2]
 
-    # Parser Configuration
+    # Parser configuration
     INFILE = './input/test_case_' + TEST_CASE
 
 
     # Lists of each object returned from the parser
     hosts, links, routers, flows = parse(INFILE)
     
-    # Hopefully can be improved
     metrics.link_ids = link.Link.l_map.keys()
     metrics.link_ids.sort()
 
@@ -65,28 +65,13 @@ if __name__ == "__main__":
     for flow in flows:
         flow.startFlow()
 
-    '''
-    # ============ Test case -1 ======================
-    l1 = link.Link('L1', 10, 10, [])
-    h1 = host.Host('H1', l1)
-    h2 = host.Host('H2', l1)
-    l1.ends = [h1, h2]
-
-    for i in "THIS IS A MESSAGE":
-        pkt = packet.Packet(h1, h2, i)
-        enqueue(event.SendPacket(1, pkt, h1.link, h1))
-    # END TEST CASE -1 ===================================
-    '''
-
     while (qempty() == False and flows_done(flows) is False):
         event = dequeue()
         set_global_time(event.start_time)
         event.process()
 
-
         for lnk in links:
             lnk.update_metrics(get_global_time())
-
         for flow in flows:
             flow.update_metrics(get_global_time())
 
