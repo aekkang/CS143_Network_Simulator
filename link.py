@@ -22,6 +22,7 @@ class Link:
         self.buffer = []
         self.buf_processing = False
         self.size_in_transit = 0
+        self.curr_recipient = None
 
         # In bytes
         self.buffer_load = 0
@@ -54,8 +55,8 @@ class Link:
         return self.ends[0]
 
     def buffer_add(self, buf_obj):
-        # Buffer objects are (packet, time) tuples
-        pkt, time = buf_obj
+        # Buffer objects are (packet, sender) tuples
+        pkt, sender = buf_obj
 
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
@@ -71,11 +72,17 @@ class Link:
 
 
     def buffer_get(self):
-        pkt, time = self.buffer.pop(0)
+        pkt, sender = self.buffer.pop(0)
         self.buffer_load -= pkt.size
         self.buffer_pkts -= 1
         self.size_in_transit = pkt.size
-        return (pkt, time)
+        return (pkt, sender)
+
+    def buffer_peek(self):
+        if len(self.buffer) > 0:
+            return self.buffer[0]
+        else:
+            return None, None
 
     def buffer_empty(self):
         return len(self.buffer) == 0

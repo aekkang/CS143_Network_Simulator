@@ -2,6 +2,8 @@ from pqueue import event_queue, enqueue
 import router
 import link
 
+HALF_DUPLEX = False
+
 class Event:
     ''' Generic Event class, default priority 3'''
     def __init__(self, start_time, priority = 3):
@@ -35,15 +37,26 @@ class CheckBuffer(Event):
             self.link.buf_processing = True
             assert(self.link.buffer_empty() == False)
             packet, src = self.link.buffer_get()
+
             send_time = packet.size / self.link.rate + self.link.prop_delay
             receiver = self.link.get_receiver(src)
             enqueue(ReceivePacket(self.start_time + send_time, packet, \
                 self.link, receiver))
-            
-            # CHECK: Need to add propogation delay?
-            # + self.link.prop_delay
-            enqueue(BufferDoneProcessing(self.start_time + \
-                packet.size / self.link.rate, self.link))
+
+            next_pkt, next_src = self.link.buffer_peek()
+            if next_src is not None:
+                next_dest = self.link.get_receiver(next_src)
+            else:
+                next_dest = None
+
+            # if next_dest is None or self.link.curr_recipient != next_dest:
+            if next_dest is not None and self.link.curr_recipient != next_dest and HALF_DUPLEX:
+                self.link.curr_recipient = next_dest
+                done_time = packet.size / self.link.rate + self.link.prop_delay
+            else:
+                done_time = packet.size / self.link.rate
+
+            enqueue(BufferDoneProcessing(self.start_time + done_time, self.link))
 
 class BufferDoneProcessing(Event):
     def __init__(self, start_time, link):
