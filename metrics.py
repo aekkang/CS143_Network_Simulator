@@ -115,12 +115,12 @@ def plot_metrics(final, time):
         ax_sr.plot(fr_times[i], receive_rate[i], color=clr_str, label=i)
 
         ax_ws = fig.add_subplot(615)
-        ax_ws.plot(t, window_sizes[i], color=clr_str, label=i, lw=0.3)
+        ax_ws.plot(t, window_sizes[i], color=clr_str, label=i, lw=1.0)
         ax_ws.set_xlabel('time (s)')
         ax_ws.set_ylabel('window size\n(pkts)')
 
         ax_rtt = fig.add_subplot(616)
-        ax_rtt.plot(t, round_trip_time[i], color=clr_str, label=i, lw=0.3)
+        ax_rtt.plot(t, round_trip_time[i], color=clr_str, label=i, lw=1.0)
         ax_rtt.set_xlabel('time (s)')
         ax_rtt.set_ylabel('round trip time')
 
