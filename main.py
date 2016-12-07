@@ -16,6 +16,19 @@ def flows_done(flows):
             return False
     return True
 
+def initial_bf(routers):
+    for rtr in routers:
+        rtr.reset_distvec()
+        rtr.bf_updated = {}
+        rtr.bf_changed = False
+
+    for bf_round in range (len(routers)):
+        for rtr in routers:
+            for n_rtr in rtr.rneighbours:
+                n_dvec = router.Router.r_map[n_rtr].bf_distvec
+                n_rtr_link = rtr.rneighbours[n_rtr]
+                rtr.update_bf(n_rtr, n_dvec, n_rtr_link, 0, False)
+
 if __name__ == "__main__":
     
     # Verify that a test case number was given
@@ -39,6 +52,7 @@ if __name__ == "__main__":
 
     metrics.flow_ids = flow.Flow.f_map.keys()
 
+    '''
     # Hard-code routing tables for test-case 1
     if TEST_CASE == '1' or TEST_CASE == '3':
         routers[0].routing_table = {'H1': 'L0', 'H2': 'L1',\
@@ -47,8 +61,14 @@ if __name__ == "__main__":
         'R1':'L1', 'R4':'L3', 'R3':'L1'}
         routers[2].routing_table = {'H1': 'L2', 'H2': 'L4',\
         'R1':'L2', 'R4':'L4', 'R2':'L2'}
-        routers[3].routing_table = {'H1': 'L4', 'H2': 'L5',\
-        'R1':'L4', 'R2':'L3', 'R3':'L4'}
+        routers[3].routing_table = {'H1': 'L3', 'H2': 'L5',\
+        'R1':'L3', 'R2':'L3', 'R3':'L4'}
+    
+    #             R2
+    #         L1/    \L3
+    # H1--L0--R1      R4--L1--H2
+    #         L2\    /L4
+    #             R3 
 
     if TEST_CASE == '2':
         router.Router.r_map['R1'].routing_table = {'R2': 'L1'}
@@ -57,9 +77,11 @@ if __name__ == "__main__":
         router.Router.r_map['R3'].routing_table = {'R2': 'L2',\
         'R4': 'L3'}
         router.Router.r_map['R4'].routing_table = {'R3': 'L3'}
-
-    router.set_rneighbours()
+    '''
+    
     link.Link.ids.sort()
+    router.set_rneighbours()
+    initial_bf(routers)
 
     enqueue(event.Reroute(0, 1))
     for flow in flows:
@@ -80,3 +102,4 @@ if __name__ == "__main__":
     metrics.plot_metrics(True, get_global_time())
 
     print ("SIMULATION END")
+

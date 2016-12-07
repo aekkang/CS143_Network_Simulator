@@ -59,12 +59,14 @@ class Router:
             enqueue(event.SendPacket(time, pkt, next_link, self))    
                 
 
-    def update_bf(self, src_id, dvec, src_ln, time):
+    def update_bf(self, src_id, dvec, src_ln, time, broadcast=True):
         '''
         src_id: the ID of the router this dvec is coming from
         dvec: the distance vector sent by router src_id
         src_ln: link between self and src_id
         time: the current system time
+        broadcast: whether or not to send routing packets to neighbouring
+                   routers. Set to False for initial routing only.
         '''
         for rtr in dvec:                       # go through each router
             dist, pred, ln = dvec[rtr]             # distance and predecessor from src_id
@@ -73,11 +75,6 @@ class Router:
                 self.bf_distvec[rtr] = (dist + src_ln.bf_lcost, src_id, src_ln.id)
                 self.bf_changed = True
         self.bf_updated[src_id] = True
-
-        if self.id == 'R1' and False:
-            print ("****************")
-            print ("Received dvec from %s: " % src_id + str(dvec))
-            print ("Own dvec: " + str(self.bf_distvec))
 
         # If we have received routing packets from all neighbours,
         # then this cycle of updates is complete
@@ -92,7 +89,8 @@ class Router:
                 #print ("%s RT: "%self.id + str(self.routing_table))
             
             # Send new distvec to neighbours
-            self.broadcast_distvec(time)
+            if (broadcast):
+                self.broadcast_distvec(time)
 
             # Reset list of what we've received routing packets from
             self.bf_updated = {}
