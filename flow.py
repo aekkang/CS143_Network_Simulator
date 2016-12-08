@@ -1,4 +1,4 @@
-from math import ceil
+from math import ceil, floor
 from pqueue import event_queue, enqueue, get_global_time, qempty
 import packet
 import event
@@ -233,12 +233,13 @@ class Flow:
             # If we are in congestion avoidance mode,
             # increase the window size by 1 / W per ACK.
             else:
-                self.window_size = self.window_size + (1.0 / self.window_size)
+                self.window_size = self.window_size + (1.0 / int(self.window_size))
 
     
     def handleTimeout(self, pkt, curr_time):
         # If unacknowledged, resend the packet + its timeout event
         if pkt.number in self.unacknowledged:
+            self.window_size = 1
             enqueue(event.SendPacket(curr_time, pkt, self.source.link, \
              self.source))
             enqueue(event.PacketTimeout(curr_time + self.timeout, pkt))
