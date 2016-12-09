@@ -14,8 +14,7 @@ class Flow:
         self.id = flow_id
         self.source = source
         self.destination = destination
-        # data_amt is in megabytes.
-        self.data_amt = data_amt
+        self.data_amt = data_amt         # data_amt is in megabytes.
         self.start_time = start_time
 
         self.window_size = 1
@@ -29,7 +28,7 @@ class Flow:
         self.dup_pkt = None
 
         # For TCP Reno
-        self.ssthreshold = 500.0 # Set threshold initially high
+        self.ssthreshold = 500.0        # Set threshold initially high
         self.dup_count = 0
         self.fr_flag = False
 
@@ -85,10 +84,10 @@ class Flow:
     def receiveAck(self, ack, curr_time):
         # We recieve ACKs with number = the next packet it expects.
         # This means packet number (ack.number - 1) was received,
-        # so we delete that packet num from the unacknowledged HT.
+        # so we delete that packet num from the unacknowledged hash.
 
-        # If that packet has already been acknowledged (i.e. not in
-        # the HT) then we have a duplicate ACK for packet ack.numberself.
+        # If that packet has already been acknowledged (i.e. not in the hash)
+        # then we have a duplicate ACK for packet ack.numberself.
         if self.unacknowledged.get(ack.number - 1, None) == None:          
             # (1): This is a new duplicate packet we're dealing with.
             if self.dup_pkt != ack.number:
@@ -98,21 +97,24 @@ class Flow:
             else:
                 self.dup_count += 1
 
+            # (3): We have three dupACKS, halve the window
             if self.dup_count == 3:
                 self.halve_window(ack, curr_time, tcp_algo=self.TCP_ALG)
+            # (4+): Use fast recovery
             elif self.dup_count > 3:
                 self.fast_recovery(curr_time, tcp_algo=self.TCP_ALG)
 
         # If we've successfully received an ACK for an UNACK'd packet,
         # we remove the packet from the map and update our RTT estimate.
         else:
-            # We can remove the correctly acknowledged packet from our
-            # unacknowledged packets map
+            # Reset the window size to threshold if exiting fast recovery
             if self.fr_flag:
                 if self.TCP_ALG == "reno":
                     self.window_size = self.ssthreshold
                 self.fr_flag = False
 
+            # We can remove the correctly acknowledged packet from our
+            # unacknowledged packets map
             for pktnum in self.unacknowledged.keys():
                 if pktnum < ack.number - 1:
                     self.unacknowledged.pop(pktnum)
@@ -132,9 +134,6 @@ class Flow:
                 self.unacknowledged[self.curr_pkt] = curr_time
                 self.curr_pkt += 1
                 self.sent_packets += 1
-
-        if self.curr_pkt % 100 == 0:
-            cprint ("current packet is %d from flow %s" % (self.curr_pkt, self.id))
 
 
     def update_metrics(self, time):
@@ -159,6 +158,9 @@ class Flow:
                 self.window_size, time, update_flow_rate)
 
     def fast_window(self):
+        '''
+        Compute window size for TCP FAST
+        '''
         if self.curr_RTT != None:
             return min(2 * self.window_size, (1 - self.GAMMA) * \
                     self.window_size + self.GAMMA * ((self.min_RTT / self.curr_RTT) * \
@@ -175,7 +177,7 @@ class Flow:
             self.window_size += 3
 
         # Remake the missing packet.
-        cprint ('\tresending dropped packet', ack.number)
+        cprint ('\t %s resending dropped packet %d' % (self.id, ack.number))
         self.makePacket("PACKET %d" % ack.number, ack.number, curr_time)
 
         # Set the curr_pkt to the next packet that was dropped.
@@ -183,8 +185,7 @@ class Flow:
 
         # Edit the start time logged in the unack map.
         self.unacknowledged[ack.number - 1] = curr_time
-        cprint ("\tnew window size is", self.window_size)
-        # cprint ("current packet", self.curr_pkt)
+        cprint ("\t %s new window size is %d" % (self.id, self.window_size))
 
         self.fr_flag = True
 
@@ -199,21 +200,18 @@ class Flow:
         for i in xrange(window_space):
             if (self.curr_pkt < self.num_packets):
                 self.makePacket("PACKET %d" % self.curr_pkt, self.curr_pkt, curr_time)
-
                 self.unacknowledged[self.curr_pkt] = curr_time
                 self.curr_pkt += 1
 
     def adjust_window(self, ack, curr_time, tcp_algo='fast'):
-
         # If this is not the first duplicate ACK for a given
-        # dup ACK number, then we do fast recovery stuff, i.e.
-        # adding 1 to the window size.
+        # dup ACK number, then we do fast recovery, i.e.
+        # add 1 to the window size.
 
         self.prev_RTT = self.curr_RTT
         self.curr_RTT = curr_time - self.unacknowledged.pop(ack.number - 1)
 
         if tcp_algo == 'fast':
-            
             # Update our min_RTT
             if self.curr_RTT < self.min_RTT:
                 self.min_RTT = self.curr_RTT

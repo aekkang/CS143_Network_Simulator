@@ -4,7 +4,8 @@ import link
 import packet
 from metrics import cprint
 
-INF = 2147483647
+INF = 2147483647          # Infinity. For unreachable nodes in BF routing
+
 class Router:
     PKT_SENT = 0
     PKT_ACKED = 1
@@ -14,7 +15,6 @@ class Router:
     
     r_map = {}
 
-    # Links is a list of links
     def __init__(self, router_id, links):
         self.id = router_id
         Router.ids.append(self.id)
@@ -23,6 +23,7 @@ class Router:
         # using a class method.
         self.routing_table = {}
 
+        # Take the passed list of link IDs, store a list of links
         self.links = [link.Link.l_map[i] for i in links]
 
         # Neighbouring routers (map of router ID -> connecting link

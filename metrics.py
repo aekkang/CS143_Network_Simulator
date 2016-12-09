@@ -29,7 +29,8 @@ f_times = {}
 VERBOSE = False
 
 colors = ['yellowgreen', 'cornflowerblue', 'salmon', 'mediumpurple', \
-    'goldenrod', 'mediumaquamarine', 'darkblue', 'orchid', 'mediumvioletred', 'cadetblue']
+          'goldenrod', 'mediumaquamarine', 'darkblue', 'orchid', \
+          'mediumvioletred', 'cadetblue']
 avg_color = 'plum'
 
 fig = plt.figure(figsize=(10, 10))
@@ -44,20 +45,26 @@ def dict_insert(key, d, item):
     else:
         d[key].append(item)
 
+# Update link metrics
 def update_link(link_id, bufload, pktloss, flowrate, time, update_link_rate):
     global buffer_load, packet_loss, flow_rate, l_times
 
     dict_insert(link_id, buffer_load, bufload)
     dict_insert(link_id, packet_loss, pktloss)
     dict_insert(link_id, l_times, time)
+    
+    # Only update link rate in discrete time intervals
     if update_link_rate:
         dict_insert(link_id, flow_rate, flowrate)
         dict_insert(link_id, lr_times, time)
 
+# Update flow metrics
 def update_flow(flow_id, send_r, rec_r, rtts, w_size, time, update_flow_rate):
     global send_rate, receive_rate, round_trip_time
 
     dict_insert(flow_id, send_rate, send_r)
+    
+    # Only update flow rate in discrete time intervals
     if update_flow_rate:
         dict_insert(flow_id, receive_rate, rec_r)
         dict_insert(flow_id, fr_times, time)
@@ -78,7 +85,6 @@ def plot_metrics(final, time):
         send_rate, receive_rate, round_trip_time, window_sizes
 
     for i in link_ids:
-
         if get_num(i) not in [1, 2, 3]:
             continue
 
@@ -106,7 +112,6 @@ def plot_metrics(final, time):
         plt.legend(loc='upper right', prop={'size': 9})
 
     for i in flow_ids:
-
         t = f_times[i]
         clr_str = colors[get_num(i)]
 

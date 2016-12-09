@@ -62,7 +62,7 @@ class Link:
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
             self.lost_packets += 1
-            cprint ("Dropped a packet. Total dropped: %d" % self.lost_packets)
+            cprint ("%s dropped a packet. Total: %d" % (self.id, self.lost_packets))
             return
 
         self.buffer.append(buf_obj)
@@ -93,6 +93,7 @@ class Link:
         pktloss = self.lost_packets - self.prev_lost_packets
         self.prev_lost_packets = self.lost_packets
 
+        # Update flow rate discretely in intervals of ~0.1 seconds
         if time >= self.prev_time + 0.1:
             link_rate = (self.aggr_flow_rate - self.prev_flow_rate)\
                         / (1024 ** 2 * (time - self.prev_time))
@@ -100,8 +101,6 @@ class Link:
             self.prev_time = time
             self.prev_flow_rate = self.aggr_flow_rate
             update_link_rate = True
-
-            
         else:
             link_rate = 0
             update_link_rate = False
@@ -109,7 +108,10 @@ class Link:
         metrics.update_link(self.id, bufload, pktloss, link_rate, time, update_link_rate)
 
     def set_linkcost(self):
-        self.bf_lcost = self.buffer_load + 1
+        '''
+        Set link cost for Bellman-Ford based on link occupancy
+        '''
+        self.bf_lcost = self.buffer_load + 1  # Add 1 to account for the link itself
         if self.buf_processing:
             self.bf_lcost += self.size_in_transit
 
