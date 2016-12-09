@@ -21,9 +21,15 @@ class Link:
 
         self.buffer = []
         self.buf_processing = False
+        self.size_in_transit = 0
+        self.curr_recipient = None
 
         # In bytes
         self.buffer_load = 0
+        self.buffer_pkts = 0
+
+        # Bellman-Ford link cost
+        self.bf_lcost = 1
 
         # Ends is a list that contains the object on either side of the list.
         # Its size at any time should be at most two.
@@ -31,9 +37,12 @@ class Link:
 
         # Metric lists
         self.lost_packets = 0
+        self.prev_lost_packets = 0
+        self.prev_packetloss = 0
         self.aggr_flow_rate = 0
-        self.buf_occupancy = []
-        self.packet_loss = []
+        self.prev_flow_rate = 0
+        self.prev_time = 0
+
 
     def add_end(self, entity):
         assert(len(self.ends) < 2)
@@ -46,37 +55,62 @@ class Link:
         return self.ends[0]
 
     def buffer_add(self, buf_obj):
-        # Buffer objects are (packet, time) tuples
-        pkt, time = buf_obj
+        # Buffer objects are (packet, sender) tuples
+        pkt, sender = buf_obj
 
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
             self.lost_packets += 1
+            print ("Dropped a packet. Now at: %d" % self.lost_packets)
             return
 
         self.buffer.append(buf_obj)
-        self.aggr_flow_rate += 1
+        if isinstance(pkt, packet.DataPkt):
+            self.aggr_flow_rate += pkt.size * 8
         self.buffer_load += pkt.size
+        self.buffer_pkts += 1
 
 
     def buffer_get(self):
-        pkt, time = self.buffer.pop(0)
+        pkt, sender = self.buffer.pop(0)
         self.buffer_load -= pkt.size
-        return (pkt, time)
+        self.buffer_pkts -= 1
+        self.size_in_transit = pkt.size
+        return (pkt, sender)
+
+    def buffer_peek(self):
+        if len(self.buffer) > 0:
+            return self.buffer[0]
+        else:
+            return None, None
 
     def buffer_empty(self):
         return len(self.buffer) == 0
 
     def update_metrics(self, time):
-        bufload = float(self.buffer_load) / self.buffer_size * 100
-        pktloss = self.lost_packets
-        flowrate = self.aggr_flow_rate / time
+        bufload = self.buffer_pkts
+        pktloss = self.lost_packets - self.prev_lost_packets
+        self.prev_lost_packets = self.lost_packets
 
-        metrics.update_link(self.id, bufload, pktloss, flowrate, time)
+        if time >= self.prev_time + 0.1:
+            link_rate = (self.aggr_flow_rate - self.prev_flow_rate)\
+                        / (1024 ** 2 * (time - self.prev_time))
 
-        # To look into
-        self.buf_occupancy.append(self.buffer_load)
-        self.packet_loss.append(self.lost_packets)
+            self.prev_time = time
+            self.prev_flow_rate = self.aggr_flow_rate
+            update_link_rate = True
+
+            
+        else:
+            link_rate = 0
+            update_link_rate = False
+                  
+        metrics.update_link(self.id, bufload, pktloss, link_rate, time, update_link_rate)
+
+    def set_linkcost(self):
+        self.bf_lcost = self.buffer_load + 1
+        if self.buf_processing:
+            self.bf_lcost += self.size_in_transit
 
     def __str__(self):
         return "<Link ID: " + str(self.id) + ", Link Rate: " + str(self.rate) + \
@@ -87,3 +121,6 @@ class Link:
     __repr__ = __str__
 
 
+def set_linkcosts():
+    for link_id in Link.ids:
+        Link.l_map[link_id].set_linkcost()

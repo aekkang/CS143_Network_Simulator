@@ -27,9 +27,10 @@ class Host:
         # Hash table recording what packet we're expecting
         # from which flow.
         self.expected_pkt = {}
+        self.received_pkts = {}
 
     def receive(self, pkt, time):
-        print (pkt.payload, time)
+        #print (pkt.payload, time)
         if (isinstance(pkt, packet.Ack)):
             pkt.flow.receiveAck(pkt, time)
         
@@ -44,9 +45,17 @@ class Host:
                 # increment its value in next_packet.
                 if self.expected_pkt[pkt.flow.id] == pkt.number:
                     self.expected_pkt[pkt.flow.id] += 1
+                    while self.expected_pkt[pkt.flow.id] in \
+                    self.received_pkts.setdefault(pkt.flow.id, []):
+                        self.received_pkts[pkt.flow.id].remove(self.expected_pkt[pkt.flow.id])
+                        self.expected_pkt[pkt.flow.id] += 1
+                else:
+                    self.received_pkts.setdefault(pkt.flow.id, []).append(pkt.number)
 
                 ack = packet.makeAck(pkt.flow, self.expected_pkt[pkt.flow.id])
                 enqueue(event.SendPacket(time, ack, self.link, self))
+
+                pkt.flow.received_packets += 1
 
             # If the incoming packet has a number LESS THAN the one
             # we're expecting, it's a duplicate and we don't care
@@ -55,6 +64,10 @@ class Host:
 
     def __str__(self):
         return "<Host ID: " + str(self.id) + ", Address: " + str(self.address) +  \
-            ", Link: " + str(self.link) + ">"
+            ", Link: " + str(self.link) + ">" 
+            # ", Expected Packet: " + str(self.expected_pkt) + \
+            # + ">"
+             # + ", is source: " + str(self.is_source) + ", is dest: " + \
+             # str(self.is_dest) + ">"
 
     __repr__ = __str__

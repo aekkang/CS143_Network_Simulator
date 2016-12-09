@@ -28,9 +28,26 @@ def makeAck(flow, pkt_number):
     return Ack(flow.destination, flow.source, pkt_number, flow)
 
 
+class RtAck(Packet):
+    def __init__(self, rtpkt):
+        super(self.__class__, self).__init__(rtpkt.recipient, rtpkt.sender, \
+            "RT ACK", 0, Ack.ACK_SIZE, None)
+        self.rtpkt = rtpkt
+
+
 class DataPkt(Packet):
     PACKET_SIZE = 1024
 
     def __init__(self, sender, recipient, payload, number, flow):
         super(self.__class__, self).__init__(sender, recipient, payload, \
             number, DataPkt.PACKET_SIZE, flow)
+
+class RoutingPkt(Packet):
+    PACKET_SIZE = 64
+
+    def __init__(self, sender, recipient, distvec, bf_round):
+        super(self.__class__, self).__init__(sender, recipient, "RtPkt", \
+            0, RoutingPkt.PACKET_SIZE, None)
+        self.distvec = distvec
+        self.bf_round = bf_round
+

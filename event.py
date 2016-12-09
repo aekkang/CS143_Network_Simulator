@@ -1,4 +1,8 @@
 from pqueue import event_queue, enqueue
+import router
+import link
+
+HALF_DUPLEX = False
 
 class Event:
     ''' Generic Event class, default priority 3'''
@@ -33,15 +37,26 @@ class CheckBuffer(Event):
             self.link.buf_processing = True
             assert(self.link.buffer_empty() == False)
             packet, src = self.link.buffer_get()
+
             send_time = packet.size / self.link.rate + self.link.prop_delay
             receiver = self.link.get_receiver(src)
             enqueue(ReceivePacket(self.start_time + send_time, packet, \
                 self.link, receiver))
-            
-            # CHECK: Need to add propogation delay?
-            # + self.link.prop_delay
-            enqueue(BufferDoneProcessing(self.start_time + \
-                packet.size / self.link.rate, self.link))
+
+            next_pkt, next_src = self.link.buffer_peek()
+            if next_src is not None:
+                next_dest = self.link.get_receiver(next_src)
+            else:
+                next_dest = None
+
+            # if next_dest is None or self.link.curr_recipient != next_dest:
+            if next_dest is not None and self.link.curr_recipient != next_dest and HALF_DUPLEX:
+                self.link.curr_recipient = next_dest
+                done_time = packet.size / self.link.rate + self.link.prop_delay
+            else:
+                done_time = packet.size / self.link.rate
+
+            enqueue(BufferDoneProcessing(self.start_time + done_time, self.link))
 
 class BufferDoneProcessing(Event):
     def __init__(self, start_time, link):
@@ -51,6 +66,7 @@ class BufferDoneProcessing(Event):
 
     def process(self):
         self.link.buf_processing = False
+        self.link.size_in_transit = 0
         enqueue(CheckBuffer(self.start_time, self.link))
 
 class ReceivePacket(Event):
@@ -65,6 +81,47 @@ class ReceivePacket(Event):
         enqueue(CheckBuffer(self.start_time, self.link,))
         self.receiver.receive(self.packet, self.start_time)
 
+class RtPktTimeout(Event):
+    def __init__(self, start_time, router, rtpkt):
+        self.start_time = start_time
+        self.router = router
+        self.rtpkt = rtpkt
+        self.priority = 2
+
+    def process(self):
+        self.rtpkt.sender.handle_timeout(self.start_time, self.rtpkt)
+
+
+class Reroute(Event):
+    WAIT_INTERVAL = 5
+    def __init__(self, start_time, round_no):
+        self.start_time = start_time
+        self.round_no = round_no
+        self.priority = 5  #rerouting should happen after any simultaneous events
+
+    def process(self):
+        print ("==================================")
+        print ("rerouting round %d" % self.round_no)
+        link.set_linkcosts()
+        router.reset_bf(self.start_time, self.round_no)
+        enqueue(Reroute(self.start_time + Reroute.WAIT_INTERVAL, self.round_no + 1))
+
+        #debugging output
+        print ("Link costs:")
+        coststr = ""
+        for l_id in link.Link.ids:
+            coststr += "%s: %d " % (l_id, link.Link.l_map[l_id].bf_lcost)
+        print (coststr)
+        '''
+        print ("\nRouter distvecs:")
+        for r_id in router.Router.ids:
+            print r_id + str(router.Router.r_map[r_id].bf_distvec)
+        '''
+        print ("\nRouting tables:")
+        for r_id in router.Router.ids:
+            print r_id + str(router.Router.r_map[r_id].routing_table)
+        
+        print ("==================================")
 
 class PacketTimeout(Event):
     def __init__(self, start_time, packet):
@@ -76,3 +133,15 @@ class PacketTimeout(Event):
         self.packet.flow.handleTimeout(self.packet, self.start_time)
 
 
+# Used specifically for TCP FAST.
+class UpdateWindow(Event):
+    def __init__(self, start_time, flow):
+        self.start_time = start_time
+        self.priority = 3
+        self.flow = flow
+
+    def process(self):
+        print 'periodically updating window'
+        self.flow.window_size = self.flow.fast_window()
+        enqueue(UpdateWindow(self.start_time + self.flow.update_period, \
+            self.flow))
