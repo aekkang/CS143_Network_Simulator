@@ -31,9 +31,15 @@ def initial_bf(routers):
 
 if __name__ == "__main__":
     
+    # Check for verbose option
+    for i in sys.argv:
+        if i == "-v":
+            sys.argv.remove(i)
+            metrics.VERBOSE = True
+
     # Verify that a test case number was given
     if len(sys.argv) != 3:
-        print "usage: python main.py [TEST_CASE_NO] [TCP_ALG]"
+        print "usage: python main.py [-v] [TEST_CASE_NO] [TCP_ALG]"
         sys.exit(-1)
     
     # Read arguments to figure out what test case and TCP algorithm to use

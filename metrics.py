@@ -26,6 +26,8 @@ lr_times = {}
 fr_times = {}
 f_times = {}
 
+VERBOSE = False
+
 colors = ['yellowgreen', 'cornflowerblue', 'salmon', 'mediumpurple', \
     'goldenrod', 'mediumaquamarine', 'darkblue', 'orchid', 'mediumvioletred', 'cadetblue']
 avg_color = 'plum'
@@ -137,4 +139,6 @@ def plot_metrics(final, time):
         plt.draw()
         plt.show()
 
-
+def cprint(*args):
+    if VERBOSE:
+        print (" ".join((map(str, args))))

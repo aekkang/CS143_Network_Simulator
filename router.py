@@ -2,6 +2,7 @@ from pqueue import event_queue, enqueue, dequeue, qempty
 import event
 import link
 import packet
+from metrics import cprint
 
 INF = 2147483647
 class Router:
@@ -80,13 +81,13 @@ class Router:
         # then this cycle of updates is complete
         if len(self.bf_updated) == len(self.rneighbours):
             if self.bf_changed == False:
-                #print ("%s updating RT. Distvec:" % self.id + str(self.bf_distvec))
+                #cprint ("%s updating RT. Distvec:" % self.id + str(self.bf_distvec))
                 
                 # If the distance vector didn't change the BF is done
                 # and we should/can update the routing table
                 self.update_routing_table()
-                
-                #print ("%s RT: "%self.id + str(self.routing_table))
+            
+                #cprint ("%s RT: "%self.id + str(self.routing_table))
             
             # Send new distvec to neighbours
             if (broadcast):
@@ -97,7 +98,7 @@ class Router:
             self.bf_changed = False
 
     def broadcast_distvec(self, time):
-        #print ("%s broadcasting " % self.id + str(self.bf_distvec))
+        #cprint ("%s broadcasting " % self.id + str(self.bf_distvec))
         for rtr_id in self.rneighbours:
             link = self.rneighbours[rtr_id]
             dest = link.get_receiver(self)
@@ -138,7 +139,7 @@ class Router:
             recv_id = lnk.get_receiver(self).id
             self.bf_distvec[recv_id] = (lnk.bf_lcost, recv_id, lnk.id)
         self.bf_distvec[self.id] = (0, self.id, None)
-        #print ("%s distvec reset to " % self.id + str(self.bf_distvec))
+        #cprint ("%s distvec reset to " % self.id + str(self.bf_distvec))
 
     def __str__(self):
         return "<Router ID: " + str(self.id) + ", Routing table: " + \

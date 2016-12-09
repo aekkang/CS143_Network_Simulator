@@ -3,6 +3,7 @@ from pqueue import event_queue, enqueue, get_global_time, qempty
 import packet
 import event
 import metrics
+from metrics import cprint
 
 class Flow:
     f_map = {}
@@ -133,7 +134,7 @@ class Flow:
                 self.sent_packets += 1
 
         if self.curr_pkt % 100 == 0:
-            print "current packet is %d from flow %s" % (self.curr_pkt, self.id)
+            cprint ("current packet is %d from flow %s" % (self.curr_pkt, self.id))
 
 
     def update_metrics(self, time):
@@ -174,7 +175,7 @@ class Flow:
             self.window_size += 3
 
         # Remake the missing packet.
-        print '\tresending dropped packet', ack.number
+        cprint ('\tresending dropped packet', ack.number)
         self.makePacket("PACKET %d" % ack.number, ack.number, curr_time)
 
         # Set the curr_pkt to the next packet that was dropped.
@@ -182,8 +183,8 @@ class Flow:
 
         # Edit the start time logged in the unack map.
         self.unacknowledged[ack.number - 1] = curr_time
-        print "\tnew window size is", self.window_size
-        # print "current packet", self.curr_pkt
+        cprint ("\tnew window size is", self.window_size)
+        # cprint ("current packet", self.curr_pkt)
 
         self.fr_flag = True
 

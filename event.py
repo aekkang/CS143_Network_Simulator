@@ -1,6 +1,7 @@
 from pqueue import event_queue, enqueue
 import router
 import link
+from metrics import cprint
 
 HALF_DUPLEX = False
 
@@ -100,28 +101,28 @@ class Reroute(Event):
         self.priority = 5  #rerouting should happen after any simultaneous events
 
     def process(self):
-        print ("==================================")
-        print ("rerouting round %d" % self.round_no)
+        cprint ("==================================")
+        cprint ("Rerouting round %d" % self.round_no)
         link.set_linkcosts()
         router.reset_bf(self.start_time, self.round_no)
         enqueue(Reroute(self.start_time + Reroute.WAIT_INTERVAL, self.round_no + 1))
 
         #debugging output
-        print ("Link costs:")
+        cprint ("Link costs:")
         coststr = ""
         for l_id in link.Link.ids:
             coststr += "%s: %d " % (l_id, link.Link.l_map[l_id].bf_lcost)
-        print (coststr)
+        cprint (coststr)
         '''
         print ("\nRouter distvecs:")
         for r_id in router.Router.ids:
             print r_id + str(router.Router.r_map[r_id].bf_distvec)
         '''
-        print ("\nRouting tables:")
+        cprint ("\nRouting tables:")
         for r_id in router.Router.ids:
-            print r_id + str(router.Router.r_map[r_id].routing_table)
+            cprint (r_id + str(router.Router.r_map[r_id].routing_table))
         
-        print ("==================================")
+        cprint ("==================================")
 
 class PacketTimeout(Event):
     def __init__(self, start_time, packet):
@@ -141,7 +142,7 @@ class UpdateWindow(Event):
         self.flow = flow
 
     def process(self):
-        print 'periodically updating window'
+        cprint ('periodically updating window')
         self.flow.window_size = self.flow.fast_window()
         enqueue(UpdateWindow(self.start_time + self.flow.update_period, \
             self.flow))

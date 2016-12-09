@@ -1,6 +1,7 @@
 import packet
 import metrics
 from pqueue import get_global_time, global_time
+from metrics import cprint
 PACKET_SIZE = 1024.0
 
 class Link:
@@ -61,7 +62,7 @@ class Link:
         # Drop packet if the buffer is full
         if self.buffer_load >= self.buffer_size:
             self.lost_packets += 1
-            print ("Dropped a packet. Now at: %d" % self.lost_packets)
+            cprint ("Dropped a packet. Total dropped: %d" % self.lost_packets)
             return
 
         self.buffer.append(buf_obj)
