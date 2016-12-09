@@ -11,11 +11,12 @@ class Event:
         self.start_time = start_time
         self.priority = priority
         
-    def process(self): pass
+#def process(self): pass
 
 class SendPacket(Event):
     def __init__(self, start_time, packet, link, sender):
         self.start_time = start_time
+        # Set priority to favour SendPacket events in order of packet number
         self.priority = 5 + (1 - 1.0/(packet.number + 1))
         self.link = link
         self.packet = packet
@@ -101,27 +102,25 @@ class Reroute(Event):
         self.priority = 5  #rerouting should happen after any simultaneous events
 
     def process(self):
+        # Debugging output
         cprint ("==================================")
         cprint ("Rerouting round %d" % self.round_no)
+        
+        # Update link costs, trigger rerouting, and enqueue the event
+        # for the next rerouting
         link.set_linkcosts()
         router.reset_bf(self.start_time, self.round_no)
         enqueue(Reroute(self.start_time + Reroute.WAIT_INTERVAL, self.round_no + 1))
 
-        #debugging output
+        # Debugging output
         cprint ("Link costs:")
         coststr = ""
         for l_id in link.Link.ids:
             coststr += "%s: %d " % (l_id, link.Link.l_map[l_id].bf_lcost)
         cprint (coststr)
-        '''
-        print ("\nRouter distvecs:")
-        for r_id in router.Router.ids:
-            print r_id + str(router.Router.r_map[r_id].bf_distvec)
-        '''
         cprint ("\nRouting tables:")
         for r_id in router.Router.ids:
             cprint (r_id + str(router.Router.r_map[r_id].routing_table))
-        
         cprint ("==================================")
 
 class PacketTimeout(Event):
@@ -142,7 +141,7 @@ class UpdateWindow(Event):
         self.flow = flow
 
     def process(self):
-        cprint ('periodically updating window')
         self.flow.window_size = self.flow.fast_window()
         enqueue(UpdateWindow(self.start_time + self.flow.update_period, \
             self.flow))
+        cprint ('%s updated window to %d' % (self.flow.id, self.flow.window_size))

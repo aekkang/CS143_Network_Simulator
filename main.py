@@ -52,44 +52,22 @@ if __name__ == "__main__":
 
     # Lists of each object returned from the parser
     hosts, links, routers, flows = parse(INFILE)
-    
+
+    # Order link IDs for consistent metric reporting
     metrics.link_ids = link.Link.l_map.keys()
     metrics.link_ids.sort()
+    link.Link.ids.sort()
 
     metrics.flow_ids = flow.Flow.f_map.keys()
 
-    '''
-    # Hard-code routing tables for test-case 1
-    if TEST_CASE == '1' or TEST_CASE == '3':
-        routers[0].routing_table = {'H1': 'L0', 'H2': 'L1',\
-        'R2':'L1', 'R3':'L2', 'R4':'L1'}
-        routers[1].routing_table = {'H1': 'L1', 'H2': 'L3',\
-        'R1':'L1', 'R4':'L3', 'R3':'L1'}
-        routers[2].routing_table = {'H1': 'L2', 'H2': 'L4',\
-        'R1':'L2', 'R4':'L4', 'R2':'L2'}
-        routers[3].routing_table = {'H1': 'L3', 'H2': 'L5',\
-        'R1':'L3', 'R2':'L3', 'R3':'L4'}
-    
-    #             R2
-    #         L1/    \L3
-    # H1--L0--R1      R4--L1--H2
-    #         L2\    /L4
-    #             R3 
 
-    if TEST_CASE == '2':
-        router.Router.r_map['R1'].routing_table = {'R2': 'L1'}
-        router.Router.r_map['R2'].routing_table = {'R1': 'L1',\
-        'R3': 'L2'}
-        router.Router.r_map['R3'].routing_table = {'R2': 'L2',\
-        'R4': 'L3'}
-        router.Router.r_map['R4'].routing_table = {'R3': 'L3'}
-    '''
-    
-    link.Link.ids.sort()
+    # Initial BF routing
     router.set_rneighbours()
     initial_bf(routers)
 
-    enqueue(event.Reroute(0, 1))
+    # Set rerouting to happen periodically
+    enqueue(event.Reroute(event.Reroute.WAIT_INTERVAL, 1))
+
     for flow in flows:
         flow.startFlow()
 
@@ -98,6 +76,7 @@ if __name__ == "__main__":
         set_global_time(event.start_time)
         event.process()
 
+        # Update link and flow metrics
         for lnk in links:
             lnk.update_metrics(get_global_time())
         for flow in flows:

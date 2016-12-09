@@ -8,7 +8,7 @@ INF = 2147483647
 class Router:
     PKT_SENT = 0
     PKT_ACKED = 1
-    RTPKT_TIMEOUT = 5
+    RTPKT_TIMEOUT = 5     # Timeout interval for routing packets
 
     ids = []
     
@@ -16,28 +16,24 @@ class Router:
 
     # Links is a list of links
     def __init__(self, router_id, links):
-
-        # IDs start from 1.
-        self.address = len(Router.ids) + 1
-
         self.id = router_id
         Router.ids.append(self.id)
 
         # The routing table will be represented by a dictionary and calculated
         # using a class method.
         self.routing_table = {}
-        #self.calculate_table()
 
         self.links = [link.Link.l_map[i] for i in links]
 
-        self.rneighbours = {}    # map of router ID -> link
+        # Neighbouring routers (map of router ID -> connecting link
+        self.rneighbours = {}
 
         # Variables used for Bellman-Ford routing
-        self.bf_round = 0
-        self.bf_distvec = {}
-        self.bf_updated = {}
-        self.bf_changed = False
-        self.sent_rtpkts = {}
+        self.bf_round = 0            # which rerouting round
+        self.bf_distvec = {}         # the current distance vector
+        self.bf_updated = {}         # which neighbours we've received from
+        self.bf_changed = False      # whether or not the distvec has changed
+        self.sent_rtpkts = {}        # routing packets that have been sent
 
     def set_rneighbours(self):
         for i in self.links:
@@ -46,8 +42,11 @@ class Router:
                 self.rneighbours[nbr.id] = i
 
     def receive(self, pkt, time):
+        # Record ACKed routing packet
         if (isinstance(pkt, packet.RtAck)):
             self.sent_rtpkts[pkt.rtpkt] = Router.PKT_ACKED
+        
+        # Handle received routing packet (update BF)
         elif (isinstance(pkt, packet.RoutingPkt)):
             if self.bf_updated.get(pkt.sender.id, False) == False:
                 ack_link = self.rneighbours[pkt.sender.id]
@@ -55,6 +54,8 @@ class Router:
                 enqueue(event.SendPacket(time, rt_ack, ack_link, self))
                 if pkt.bf_round == self.bf_round:
                     self.update_bf(pkt.sender.id, pkt.distvec, ack_link, time)
+        
+        # Forward packet on according to routing table
         else:
             next_link = link.Link.l_map[self.routing_table[pkt.recipient.id]]
             enqueue(event.SendPacket(time, pkt, next_link, self))    
@@ -70,24 +71,23 @@ class Router:
                    routers. Set to False for initial routing only.
         '''
         for rtr in dvec:                       # go through each router
-            dist, pred, ln = dvec[rtr]             # distance and predecessor from src_id
+            dist, pred, ln = dvec[rtr]         # distance and predecessor from src_id
             cur_dist, cur_pred, cur_ln = self.bf_distvec.get(rtr, (INF, None, None))
+            
+            # Update distance vector if a lower cost is found
             if dist + src_ln.bf_lcost < cur_dist: 
                 self.bf_distvec[rtr] = (dist + src_ln.bf_lcost, src_id, src_ln.id)
                 self.bf_changed = True
+    
+        # Mark that we received information from this neighbour
         self.bf_updated[src_id] = True
 
-        # If we have received routing packets from all neighbours,
-        # then this cycle of updates is complete
+        # If we have received routing packets from all neighbours, iteration is complete
         if len(self.bf_updated) == len(self.rneighbours):
             if self.bf_changed == False:
-                #cprint ("%s updating RT. Distvec:" % self.id + str(self.bf_distvec))
-                
                 # If the distance vector didn't change the BF is done
                 # and we should/can update the routing table
                 self.update_routing_table()
-            
-                #cprint ("%s RT: "%self.id + str(self.routing_table))
             
             # Send new distvec to neighbours
             if (broadcast):
@@ -98,7 +98,6 @@ class Router:
             self.bf_changed = False
 
     def broadcast_distvec(self, time):
-        #cprint ("%s broadcasting " % self.id + str(self.bf_distvec))
         for rtr_id in self.rneighbours:
             link = self.rneighbours[rtr_id]
             dest = link.get_receiver(self)
@@ -130,16 +129,18 @@ class Router:
         elif status == Router.PKT_ACKED:
             del self.sent_rtpkts[rtpkt]
 
-        # If it's not in the set_rtpkts it has been acknowledged (probably
+        # If it's not in the sent_rtpkts it has been acknowledged (probably
         # from a previous send. Do nothing.
 
     def reset_distvec(self):
+        '''
+        Set distance vector to include only itself and immediate neighbours
+        '''
         self.bf_distvec = {}
         for lnk in self.links:
             recv_id = lnk.get_receiver(self).id
             self.bf_distvec[recv_id] = (lnk.bf_lcost, recv_id, lnk.id)
         self.bf_distvec[self.id] = (0, self.id, None)
-        #cprint ("%s distvec reset to " % self.id + str(self.bf_distvec))
 
     def __str__(self):
         return "<Router ID: " + str(self.id) + ", Routing table: " + \
@@ -148,6 +149,10 @@ class Router:
     __repr__ = __str__
 
 def reset_bf(time, round_no):
+    '''
+    Reset Bellman-Ford variables for all routers (used before beginning a
+    new round of rerouting.
+    '''
     for rtr_id in Router.ids:
         Router.r_map[rtr_id].bf_round = round_no
         Router.r_map[rtr_id].reset_distvec()
@@ -156,5 +161,8 @@ def reset_bf(time, round_no):
         Router.r_map[rtr_id].bf_changed = False
 
 def set_rneighbours():
+    '''
+    Set router neighbours for all routers
+    '''
     for rtr_id in Router.ids:
         Router.r_map[rtr_id].set_rneighbours();
